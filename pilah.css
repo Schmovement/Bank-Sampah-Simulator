@@ -1,0 +1,22 @@
+/* Halaman latihan memilah 3D. Token warna dan komponen dasar berasal dari style.css. */
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; min-height: 100vh; }
+a.brand { color: var(--fg); text-decoration: none; }
+nav a[aria-current="page"] { border-bottom-color: var(--fg); font-weight: 600; }
+
+section.play { border-top: 0; padding-block: 36px 56px; }
+h1.pg { font-size: clamp(2.3rem, 6.5vw, 3.8rem); text-transform: uppercase; }
+
+.stage { position: relative; height: clamp(380px, 62vh, 560px); background: var(--bg); border: 1px solid var(--line); overflow: hidden; }
+.stage canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
+.drag-tip { position: absolute; left: 12px; bottom: 12px; margin: 0; padding: 6px 10px; background: var(--fg); color: var(--bg); font: 500 0.8rem var(--font-mono); pointer-events: none; transition: opacity .4s; }
+.drag-tip.gone { opacity: 0; }
+.nogl { padding: 14px; background: var(--soft); margin: 0; }
+
+.item-card { min-height: 4.6rem; margin-block: 22px 16px; }
+.alt-label { margin: 18px 0 8px; }
+.bins .bin { min-height: 64px; padding: 12px; }
+
+@media (max-width: 480px) {
+  .stage { height: 400px; }
+}

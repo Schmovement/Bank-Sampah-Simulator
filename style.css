@@ -1,3 +1,4 @@
+/* Layout: weighing-station page. Condensed bin-label headings, a receipt-style hero, one section per step of the bank sampah flow. */
 :root {
   --bg: #F0F3EE;
   --surface: #FFFFFF;
@@ -46,6 +47,7 @@ body {
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 0;
+  margin: 0;
 }
 .wrap { max-width: 1040px; margin: 0 auto; }
 h1, h2, h3 { font-family: var(--font-display); font-stretch: 72%; font-weight: 800; line-height: 1; margin: 0; text-wrap: balance; letter-spacing: 0.005em; }
@@ -57,12 +59,14 @@ a { color: var(--accent); }
 .eyebrow { font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
+/* header */
 header.top { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center; justify-content: space-between; padding-block: 18px; border-bottom: 2px solid var(--fg); }
 .brand { font-family: var(--font-display); font-stretch: 72%; font-weight: 800; font-size: 1.35rem; text-transform: uppercase; }
 nav { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 0.95rem; }
 nav a { color: var(--fg); text-decoration: none; padding-block: 4px; border-bottom: 2px solid transparent; }
 nav a:hover { border-bottom-color: var(--accent); }
 
+/* hero */
 .hero { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 40px; padding-block: 48px 56px; align-items: center; }
 .hero .lead { font-size: 1.15rem; color: var(--muted); max-width: 34rem; margin-top: 22px; }
 .hero .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
@@ -85,6 +89,7 @@ section { padding-block: 56px; border-top: 2px solid var(--fg); }
 .sec-head { display: grid; gap: 12px; max-width: 44rem; margin-bottom: 32px; }
 .sec-head p { color: var(--muted); }
 
+/* flow */
 .flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); background: var(--surface); }
 .flow li { list-style: none; padding: 18px 16px 20px; border-right: 1px solid var(--line); display: grid; gap: 8px; align-content: start; }
 .flow li:last-child { border-right: 0; }
@@ -97,6 +102,7 @@ ol.flow { margin: 0; padding: 0; }
 .why h3 { font-size: 1.2rem; }
 .why p { color: var(--muted); font-size: 0.95rem; }
 
+/* sorting game */
 .panel { background: var(--surface); border: 1px solid var(--line); padding: 24px; }
 .game-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-family: var(--font-mono); font-size: 0.85rem; color: var(--muted); }
 .progress { height: 6px; background: var(--soft); margin-top: 10px; }
@@ -125,6 +131,7 @@ ol.flow { margin: 0; padding: 0; }
 .legend strong { color: var(--fg); font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
 .chip { width: 14px; height: 14px; display: inline-block; border-radius: 2px; flex: none; }
 
+/* calculator */
 .calc { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 24px; align-items: start; }
 .rows { display: grid; gap: 0; }
 .row { display: grid; grid-template-columns: minmax(0, 1fr) 112px 110px; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
@@ -141,6 +148,7 @@ ol.flow { margin: 0; padding: 0; }
 .note { font-size: 0.85rem; color: var(--muted); margin-top: 14px; }
 .sum .note { color: inherit; opacity: .75; margin: 0; }
 
+/* recycling */
 .crafts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 details.craft { background: var(--surface); border: 1px solid var(--line); }
 details.craft summary { list-style: none; cursor: pointer; padding: 18px 20px; display: grid; gap: 8px; }
@@ -153,11 +161,13 @@ details.craft[open] summary::after { content: "Tutup −"; }
 .craft ul, .craft ol { margin: 0; padding-left: 1.2rem; display: grid; gap: 4px; }
 .warn { background: var(--soft); padding: 10px 12px; font-size: 0.88rem; }
 
+/* values */
 .values { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); background: var(--surface); }
 .values > div { padding: 20px 18px; border-right: 1px solid var(--line); display: grid; gap: 8px; align-content: start; }
 .values > div:last-child { border-right: 0; }
 .values p { color: var(--muted); font-size: 0.92rem; }
 
+/* quiz */
 .quiz { display: grid; gap: 18px; }
 .q { background: var(--surface); border: 1px solid var(--line); padding: 20px; display: grid; gap: 12px; }
 .q h3 { font-size: 1.3rem; text-transform: none; font-stretch: 80%; line-height: 1.15; }
@@ -194,3 +204,5 @@ footer strong { color: var(--fg); }
   .values > div:last-child { border-bottom: 0; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+[hidden] { display: none !important; }
