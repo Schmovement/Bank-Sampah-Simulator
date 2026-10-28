@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bank Sampah Pemula</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,600..900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">Bank Sampah Pemula</div>
+    <nav aria-label="Navigasi halaman">
+      <a href="#cara">Cara kerja</a>
+      <a href="#pilah">Latihan memilah</a>
+      <a href="#hitung">Hitung setoran</a>
+      <a href="#daur">Daur ulang</a>
+      <a href="#nilai">Kewargaan</a>
+      <a href="#kuis">Kuis</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div>
+        <p class="eyebrow" style="margin-bottom:16px">Untuk mahasiswa Trisakti</p>
+        <h1>Sampah kampus punya harga</h1>
+        <p class="lead">Botol, kardus, dan kertas bekas yang kamu buang tiap hari masih bisa dijual dan dipakai ulang. Bank sampah mencatat setoranmu seperti tabungan. Mulai dari belajar memilah, hitung nilainya, lalu coba mengolahnya sendiri.</p>
+        <div class="cta">
+          <a class="btn primary" href="#pilah">Coba latihan memilah</a>
+          <a class="btn" href="#cara">Lihat cara kerjanya</a>
+        </div>
+      </div>
+      <aside class="nota" aria-label="Contoh nota setoran">
+        <h3>Nota setor</h3>
+        <p class="sub">Contoh simulasi, 1 minggu</p>
+        <table>
+          <tbody>
+            <tr><td>Botol plastik PET</td><td>0,5 kg</td><td>1.750</td></tr>
+            <tr><td>Gelas plastik</td><td>0,3 kg</td><td>750</td></tr>
+            <tr><td>Kardus</td><td>1,0 kg</td><td>1.800</td></tr>
+            <tr><td>Kertas HVS</td><td>0,8 kg</td><td>1.200</td></tr>
+            <tr><td>Kaleng aluminium</td><td>0,2 kg</td><td>2.000</td></tr>
+            <tr class="total"><td>Saldo minggu ini</td><td>2,8 kg</td><td>Rp 7.500</td></tr>
+          </tbody>
+        </table>
+        <p class="foot">Harga hanya contoh. Harga sebenarnya disepakati saat program berjalan.</p>
+      </aside>
+    </div>
+
+    <section id="cara">
+      <div class="sec-head">
+        <p class="eyebrow">Apa itu bank sampah</p>
+        <h2>Menabung dari sampah yang sudah dipilah</h2>
+        <p>Bank sampah adalah tempat menyetor sampah anorganik yang sudah dipilah. Petugas menimbang, mencatat, lalu menghitung nilainya. Sampah yang terpilah bisa didaur ulang, jadi tidak ikut menumpuk di tempat pembuangan akhir.</p>
+      </div>
+      <ol class="flow">
+        <li><span class="k">Langkah 1</span><h3>Kurangi</h3><p>Bawa tumbler dan tas sendiri supaya sampah baru tidak terus bertambah.</p></li>
+        <li><span class="k">Langkah 2</span><h3>Pilah</h3><p>Pisahkan organik, anorganik, residu, dan B3 sejak dari tempat sampah.</p></li>
+        <li><span class="k">Langkah 3</span><h3>Bersihkan</h3><p>Bilas botol dan gelas, lalu keringkan. Sampah yang bersih lebih laku.</p></li>
+        <li><span class="k">Langkah 4</span><h3>Setor</h3><p>Bawa ke titik setor. Sampah ditimbang dan dicatat atas namamu.</p></li>
+        <li><span class="k">Langkah 5</span><h3>Manfaatkan</h3><p>Tukar saldo sesuai kesepakatan, atau olah sendiri jadi barang berguna.</p></li>
+      </ol>
+      <div class="why">
+        <div><h3>Lingkungan</h3><p>Sampah anorganik yang terpilah dapat didaur ulang, sehingga timbulan yang terbuang berkurang. Ini sejalan dengan SDG 12, konsumsi dan produksi yang bertanggung jawab.</p></div>
+        <div><h3>Kebiasaan</h3><p>Memilah di kampus melatih kebiasaan yang ikut terbawa ke rumah, kos, dan tempat kerja nanti.</p></div>
+        <div><h3>Kewargaan</h3><p>Mengurus sampah sendiri adalah bentuk tanggung jawab warga atas ruang hidup bersama.</p></div>
+      </div>
+    </section>
+
+    <section id="pilah">
+      <div class="sec-head">
+        <p class="eyebrow">Latihan memilah</p>
+        <h2>Masuk tempat sampah yang mana?</h2>
+        <p>Ada 12 sampah yang biasa ditemui di kampus. Pilih tempat yang tepat untuk tiap benda. Setiap jawaban disertai penjelasannya.</p>
+      </div>
+      <div class="panel" id="game" aria-live="polite">
+        <div class="game-top"><span id="g-count">Sampah 1 dari 12</span><span id="g-score">Benar: 0</span></div>
+        <div class="progress" aria-hidden="true"><i id="g-bar"></i></div>
+        <div id="g-play">
+          <div class="item-card"><div class="name" id="g-name"></div><p class="hint" id="g-hint"></p></div>
+          <div class="bins" id="g-bins">
+            <button class="bin" data-c="org" id="bin-org">Organik<small>Sisa makanan, kulit buah</small></button>
+            <button class="bin" data-c="an" id="bin-an">Anorganik<small>Bisa didaur ulang</small></button>
+            <button class="bin" data-c="res" id="bin-res">Residu<small>Sulit didaur ulang</small></button>
+            <button class="bin" data-c="b3" id="bin-b3">B3<small>Berbahaya dan beracun</small></button>
+          </div>
+          <div class="feedback" id="g-fb">Pilih salah satu tempat sampah di atas.</div>
+          <div class="game-actions"><button class="btn primary" id="g-next" disabled>Sampah berikutnya</button></div>
+        </div>
+        <div class="result" id="g-result" hidden>
+          <p class="eyebrow">Hasil latihan</p>
+          <div class="score" id="r-score"></div>
+          <p id="r-msg"></p>
+          <p class="quiz-score" id="r-best"></p>
+          <div class="game-actions"><button class="btn primary" id="g-again">Main lagi</button><a class="btn" href="#hitung">Lanjut hitung setoran</a></div>
+        </div>
+      </div>
+      <div class="legend">
+        <div><strong><i class="chip" style="background:var(--c-org)"></i>Organik</strong>Mudah membusuk. Bisa jadi kompos.</div>
+        <div><strong><i class="chip" style="background:var(--c-an)"></i>Anorganik</strong>Plastik, kertas, kardus, logam, kaca yang bersih dan kering. Inilah yang disetor.</div>
+        <div><strong><i class="chip" style="background:var(--c-res)"></i>Residu</strong>Kotor atau berlapis, sulit didaur ulang. Buang ke tempat sampah umum.</div>
+        <div><strong><i class="chip" style="background:var(--c-b3)"></i>B3</strong>Baterai, lampu, bahan kimia. Jangan dicampur dengan sampah lain.</div>
+      </div>
+    </section>
+
+    <section id="hitung">
+      <div class="sec-head">
+        <p class="eyebrow">Hitung setoran</p>
+        <h2>Berapa nilai sampahmu per semester?</h2>
+        <p>Isi perkiraan berat sampah anorganik yang kamu kumpulkan dalam seminggu. Hasilnya dihitung untuk satu minggu dan satu semester (16 minggu).</p>
+      </div>
+      <div class="calc">
+        <div class="panel">
+          <div class="rows" id="rows"></div>
+          <p class="note">Harga per kilogram hanya contoh untuk simulasi. Harga di titik setor ditentukan bersama warga kampus saat program berjalan dan bisa berubah.</p>
+        </div>
+        <div class="sum" aria-live="polite">
+          <p class="eyebrow">Saldo satu minggu</p>
+          <div class="big" id="c-week">Rp 0</div>
+          <div class="sem"><span class="eyebrow">Jika rutin 16 minggu</span><span id="c-sem">Rp 0</span></div>
+          <p class="note"><span id="c-kg">0</span> kg sampah terpilah per minggu tidak masuk ke tempat sampah campuran.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="daur">
+      <div class="sec-head">
+        <p class="eyebrow">Praktik daur ulang</p>
+        <h2>Olah sendiri jadi barang berguna</h2>
+        <p>Empat proyek sederhana untuk dicoba di kos atau sesi praktik kampus. Semuanya memakai sampah yang juga bisa disetor, jadi kamu bisa memilih menjual atau memakainya sendiri.</p>
+      </div>
+      <div class="crafts">
+        <details class="craft">
+          <summary><h3>Pot tanaman dari botol</h3><div class="meta"><span>Mudah</span><span>±30 menit</span><span>Botol PET 1,5 L</span></div></summary>
+          <div class="body">
+            <div><h4>Bahan dan alat</h4><ul><li>Botol plastik bekas, bersih</li><li>Cutter atau gunting kuat</li><li>Cat atau spidol permanen</li><li>Tanah dan bibit kecil</li></ul></div>
+            <div><h4>Langkah</h4><ol><li>Bilas botol dan lepas labelnya.</li><li>Potong sepertiga bagian atas botol.</li><li>Lubangi bagian bawah untuk saluran air.</li><li>Hias dengan cat, lalu isi tanah dan bibit.</li></ol></div>
+            <p class="warn">Minta bantuan teman untuk memegang botol saat memotong dan hati-hati dengan cutter.</p>
+          </div>
+        </details>
+        <details class="craft">
+          <summary><h3>Tempat pensil dari kaleng</h3><div class="meta"><span>Mudah</span><span>±20 menit</span><span>Kaleng minuman</span></div></summary>
+          <div class="body">
+            <div><h4>Bahan dan alat</h4><ul><li>Kaleng bekas, bersih dan kering</li><li>Kertas bekas atau kain perca</li><li>Lem dan lakban kain</li></ul></div>
+            <div><h4>Langkah</h4><ol><li>Cuci kaleng dan keringkan.</li><li>Lapisi tepi atas dengan lakban kain supaya tidak tajam.</li><li>Tempel kertas bekas atau kain di sekeliling kaleng.</li><li>Biarkan lem kering sebelum dipakai.</li></ol></div>
+            <p class="warn">Gunakan kaleng yang tutupnya sudah terbuka rata dan pastikan tepinya tidak melukai tangan.</p>
+          </div>
+        </details>
+        <details class="craft">
+          <summary><h3>Kertas daur ulang</h3><div class="meta"><span>Sedang</span><span>±1 jam + jemur sehari</span><span>Kertas HVS bekas</span></div></summary>
+          <div class="body">
+            <div><h4>Bahan dan alat</h4><ul><li>Kertas bekas tanpa banyak tinta</li><li>Blender dan baskom air</li><li>Saringan atau bingkai berkain kasa</li><li>Kain bersih dan penindih</li></ul></div>
+            <div><h4>Langkah</h4><ol><li>Sobek kertas kecil-kecil dan rendam beberapa jam.</li><li>Blender bersama air sampai jadi bubur.</li><li>Tuang bubur ke saringan dan ratakan tipis.</li><li>Tekan dengan kain, lalu jemur sampai kering.</li></ol></div>
+            <p class="warn">Blender hanya dipakai untuk bahan praktik, lalu cuci bersih sebelum dipakai untuk makanan.</p>
+          </div>
+        </details>
+        <details class="craft">
+          <summary><h3>Organizer meja dari kardus</h3><div class="meta"><span>Sedang</span><span>±45 menit</span><span>Kardus bekas</span></div></summary>
+          <div class="body">
+            <div><h4>Bahan dan alat</h4><ul><li>Kardus tebal bersih</li><li>Cutter, penggaris, lem</li><li>Kertas bekas atau kain untuk pelapis</li></ul></div>
+            <div><h4>Langkah</h4><ol><li>Ukur dan potong kardus jadi alas dan sekat.</li><li>Rekatkan sekat pada alas dengan lem.</li><li>Lapisi dengan kertas atau kain.</li><li>Pakai untuk alat tulis dan kabel di meja belajar.</li></ol></div>
+            <p class="warn">Potong di atas alas cutter dan arahkan pisau menjauh dari tubuh.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section id="nilai">
+      <div class="sec-head">
+        <p class="eyebrow">Kewargaan ekologis</p>
+        <h2>Memilah juga latihan menjadi warga yang bertanggung jawab</h2>
+        <p>Kewargaan ekologis berarti menjalankan hak dan kewajiban sebagai warga untuk menjaga lingkungan, bukan hanya mengikuti aturan. Kebiasaan ini tumbuh bertahap: dari tahu, bisa, mau, sampai ikut bergerak.</p>
+      </div>
+      <div class="values">
+        <div><p class="eyebrow">Fase 1</p><h3>Pengetahuan</h3><p>Memahami jenis sampah dan nilainya lewat materi dan latihan di halaman ini.</p></div>
+        <div><p class="eyebrow">Fase 2</p><h3>Keterampilan</h3><p>Memilah dan mengolah sampah lewat praktik daur ulang.</p></div>
+        <div><p class="eyebrow">Fase 3</p><h3>Sikap</h3><p>Tumbuh rasa peduli dan bertanggung jawab atas sampah yang kita hasilkan.</p></div>
+        <div><p class="eyebrow">Fase 4</p><h3>Partisipasi</h3><p>Rutin menyetor, mengajak teman, dan ikut mengelola bank sampah bersama.</p></div>
+      </div>
+    </section>
+
+    <section id="kuis">
+      <div class="sec-head">
+        <p class="eyebrow">Uji pemahaman</p>
+        <h2>Kuis singkat</h2>
+        <p>Empat pertanyaan untuk memeriksa apa yang sudah kamu pelajari.</p>
+      </div>
+      <div class="quiz" id="quiz"></div>
+      <p class="quiz-score" id="quiz-score" style="margin-top:18px"></p>
+    </section>
+  </main>
+
+  <footer>
+    <p><strong>Proyek mahasiswa mata kuliah Civics (UMN).</strong> Halaman ini bukan situs resmi Universitas Trisakti dan memakai harga serta angka contoh untuk simulasi.</p>
+    <p><strong>Rujukan:</strong></p>
+    <ul>
+      <li>Saputro, Syaifullah, &amp; Setiawan (2026). Faktor pendukung dan penghambat program bank sampah dalam meningkatkan ecological citizenship. <em>Pendas: Jurnal Ilmiah Pendidikan Dasar</em>, 11(3).</li>
+      <li>Mahmudi, Ismail, Sawaludin, &amp; Alqadri (2024). Penguatan karakter peduli lingkungan melalui program bank sampah Inges. <em>Jurnal Kewarganegaraan</em>, 21(2).</li>
+      <li>Subarkah, Cahyono, &amp; Sutrisno (2024). Penguatan kewarganegaraan ekologis melalui pemberdayaan masyarakat dalam pengelolaan bank sampah. <em>Qualitative Research of Business and Social Sciences</em>, 1(2).</li>
+    </ul>
+  </footer>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
