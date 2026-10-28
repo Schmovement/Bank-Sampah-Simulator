@@ -29,11 +29,12 @@
         <h1 class="pg">Seret sampah ke tong yang tepat</h1>
         <p>Ada 12 benda yang biasa ditemui di kampus. Tahan benda 3D di tengah, seret ke salah satu dari empat tong, lalu lepas. Kalau salah, benda kembali dan kamu bisa mencoba lagi. Skor dihitung dari jawaban benar pada percobaan pertama.</p>
       </div>
-
+      
       <div class="panel" id="game">
         <div class="game-top"><span id="g-count">Sampah 1 dari 12</span><span id="g-score">Benar: 0</span></div>
         <div class="progress" aria-hidden="true"><i id="g-bar"></i></div>
-
+        
+        <div class="game-actions"><button class="btn primary" id="g-next" disabled>Sampah berikutnya</button></div>
         <div id="g-play">
           <div class="item-card"><div class="name" id="g-name"></div><p class="hint" id="g-hint"></p></div>
 
@@ -52,7 +53,6 @@
             <button class="bin" data-c="res" id="bin-res">Residu<small>Sulit didaur ulang</small></button>
             <button class="bin" data-c="b3" id="bin-b3">B3<small>Berbahaya dan beracun</small></button>
           </div>
-          <div class="game-actions"><button class="btn primary" id="g-next" disabled>Sampah berikutnya</button></div>
         </div>
 
         <div class="result" id="g-result" hidden>
