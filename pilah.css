@@ -20,3 +20,7 @@ h1.pg { font-size: clamp(2.3rem, 6.5vw, 3.8rem); text-transform: uppercase; }
 @media (max-width: 480px) {
   .stage { height: 400px; }
 }
+#sort-g-play {
+  display: flex;
+  justify-content: space-between;
+}

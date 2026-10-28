@@ -65,6 +65,10 @@ header.top { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center
 nav { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 0.95rem; }
 nav a { color: var(--fg); text-decoration: none; padding-block: 4px; border-bottom: 2px solid transparent; }
 nav a:hover { border-bottom-color: var(--accent); }
+nav { align-items: center; }
+.theme-btn { display: inline-flex; align-items: center; gap: 8px; font: 600 0.85rem var(--font-body); color: var(--fg); background: transparent; border: 2px solid var(--fg); border-radius: 4px; padding: 5px 12px; cursor: pointer; min-height: 34px; }
+.theme-btn i { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--fg); background: linear-gradient(90deg, var(--fg) 50%, transparent 50%); flex: none; }
+.theme-btn:hover { background: var(--soft); }
 
 /* hero */
 .hero { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 40px; padding-block: 48px 56px; align-items: center; }

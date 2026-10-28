@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,600..900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="pilah.css">
+<script src="theme.js" defer></script>
 </head>
 <body>
 <div class="wrap">
@@ -19,9 +20,9 @@
       <a href="index.html#daur">Daur ulang</a>
       <a href="index.html#nilai">Kewargaan</a>
       <a href="index.html#kuis">Kuis</a>
+      <button type="button" class="theme-btn" id="theme-toggle" aria-pressed="false"><i aria-hidden="true"></i><span>Mode gelap</span></button>
     </nav>
   </header>
-
   <main>
     <section class="play">
       <div class="sec-head">
@@ -34,10 +35,12 @@
         <div class="game-top"><span id="g-count">Sampah 1 dari 12</span><span id="g-score">Benar: 0</span></div>
         <div class="progress" aria-hidden="true"><i id="g-bar"></i></div>
         
-        <div class="game-actions"><button class="btn primary" id="g-next" disabled>Sampah berikutnya</button></div>
         <div id="g-play">
-          <div class="item-card"><div class="name" id="g-name"></div><p class="hint" id="g-hint"></p></div>
-
+          <div id="sort-g-play">
+            <div class="item-card"><div class="name" id="g-name"></div><p class="hint" id="g-hint"></p></div>
+            <div class="game-actions"><button class="btn primary" id="g-next" disabled>Sampah berikutnya</button></div>
+          </div>
+          
           <div class="stage" id="stage">
             <canvas id="scene" role="img" aria-label="Adegan 3D: seret benda sampah ke tong yang sesuai. Gunakan tombol tong di bawah sebagai alternatif."></canvas>
             <p class="drag-tip" id="tip">Tahan benda lalu seret ke tong</p>
