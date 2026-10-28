@@ -1,0 +1,5 @@
+# Salin file ini jadi ".env" lalu isi nilainya. Jangan upload .env ke GitHub.
+MONGODB_URI=mongodb+srv://admin:topsingkopemukaagama@banksampah.r0qxu2e.mongodb.net/?retryWrites=true&w=majority
+DB_NAME=live_experiment
+ADMIN_KEY=ste-rus-vik-vit-ezy-far
+PORT=3000
