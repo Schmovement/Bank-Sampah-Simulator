@@ -24,7 +24,7 @@
     socket.emit("user:join", { uid: guest.uid, nama: guest.nama, sid: guest.sid }, function (res) {
       if (res && res.reset) return wipe();                       // sesi lama (admin sudah reset)
       if (!res || !res.ok) return leave();
-      if (!res.hasPre || res.hasPost || res.phase === "post") return leave(); // belum waktunya, atau sudah post-task
+      if (!res.hasPre || res.phase === "post") return leave(); // belum pre-task, atau fase post (yang sudah post-task boleh di sini saat fase simulator)
       show();
     });
   });

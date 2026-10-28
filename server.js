@@ -28,6 +28,7 @@ const validAdmin = (key) => typeof key === "string" && crypto.timingSafeEqual(sh
 const str = (v, max) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 const isUid = (v) => typeof v === "string" && /^[a-z0-9]{16,40}$/.test(v);
 const noop = () => {};
+const MAX_MS = 3600000; // batas wajar waktu satu permainan: 1 jam
 
 /* Pre-task dan post-task memakai soal yang sama (quiz-data.js).
    Kunci jawaban hanya ada di server; browser menerima pertanyaan dan pilihan saja. */
@@ -64,26 +65,29 @@ function buildResult(doc) {
   };
 }
 
-// peserta dengan skor terbaik di PERMAINAN PERTAMA (game.first) dari semua peserta sesi ini.
-// Permainan ulang tidak dihitung, supaya adil bagi yang baru main sekali.
-async function topScorer(uid) {
-  const [top] = await users.find({ "game.first": { $exists: true } }, { projection: { "game.first": 1, "game.total": 1 } })
-    .sort({ "game.first": -1 }).limit(1).toArray();
-  if (!top || top.game.first < 1) return null; // belum ada yang mencetak skor
-  const skor = top.game.first;
-  const [winners, count, me] = await Promise.all([
-    users.find({ "game.first": skor }, { projection: { nama: 1 } }).sort({ nama: 1 }).limit(5).toArray(),
-    users.countDocuments({ "game.first": skor }),
-    users.countDocuments({ _id: uid, "game.first": skor })
-  ]);
-  return { skor, total: top.game.total, names: winners.map((w) => w.nama), count, me: me > 0 };
+// top 3 permainan PERTAMA (game.first): skor tertinggi dulu, seri dipecah waktu tercepat (game.firstMs), lalu nama.
+// Data tanpa waktu dianggap paling lambat. Permainan ulang tidak dihitung, supaya adil bagi yang baru main sekali.
+async function topScorers(uid) {
+  const docs = await users.find(
+    { "game.first": { $gte: 1 } },
+    { projection: { nama: 1, "game.first": 1, "game.firstMs": 1, "game.total": 1 } }
+  ).toArray();
+  if (!docs.length) return null; // belum ada yang mencetak skor
+  const ms = (d) => (Number.isInteger(d.game.firstMs) ? d.game.firstMs : Infinity);
+  docs.sort((x, y) => (y.game.first - x.game.first) || (ms(x) - ms(y)) || String(x.nama).localeCompare(String(y.nama)));
+  const rows = docs.map((d, i) => ({
+    rank: i + 1, nama: d.nama, skor: d.game.first, total: d.game.total,
+    ms: Number.isInteger(d.game.firstMs) ? d.game.firstMs : null, me: d._id === uid
+  }));
+  const mine = rows.find((r) => r.me);
+  return { list: rows.slice(0, 3), myRank: mine ? mine.rank : null, count: rows.length };
 }
 
 // hasil lengkap + peserta terbaik. Kegagalan mengambil peserta terbaik tidak boleh menggagalkan penyimpanan post-task.
 async function resultFor(doc, uid) {
   const r = buildResult(doc);
   if (!r) return null;
-  try { r.top = await topScorer(uid); } catch (e) { console.error("top:", e.message); r.top = null; }
+  try { r.top = await topScorers(uid); } catch (e) { console.error("top:", e.message); r.top = null; }
   return r;
 }
 
@@ -187,12 +191,14 @@ io.on("connection", (socket) => {
       if (!uid) return ack({ ok: false, error: "Belum masuk sesi." });
       if (socket.data.sid !== sessionId) return ack({ ok: false, reset: true });
       const skor = data && data.skor, total = data && data.total;
+      const ms = data && data.ms;
+      const msOk = Number.isInteger(ms) && ms >= 1 && ms <= MAX_MS ? ms : null; // waktu tidak valid: dianggap paling lambat
       if (!Number.isInteger(skor) || !Number.isInteger(total) || total < 1 || total > 50 || skor < 0 || skor > total) {
         return ack({ ok: false, error: "Skor tidak valid." });
       }
       const mine = { _id: uid, pre: { $exists: true }, post: { $exists: false } };
-      // skor permainan pertama: ditulis sekali saja, tidak pernah diubah oleh permainan berikutnya
-      await users.updateOne({ ...mine, "game.first": { $exists: false } }, { $set: { "game.first": skor } });
+      // skor + waktu permainan pertama: ditulis sekali saja, tidak pernah diubah oleh permainan berikutnya
+      await users.updateOne({ ...mine, "game.first": { $exists: false } }, { $set: { "game.first": skor, "game.firstMs": msOk } });
       // skor terbaik pribadi (hanya naik) dan jumlah permainan
       await users.updateOne(mine, { $max: { "game.best": skor }, $set: { "game.total": total, "game.lastAt": new Date() }, $inc: { "game.plays": 1 } });
       ack({ ok: true });

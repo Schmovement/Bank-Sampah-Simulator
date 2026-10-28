@@ -19,6 +19,7 @@
   var quiz = null;          // pertanyaan dan pilihan dari server (tanpa kunci jawaban)
   var pilah = null, pilahTried = false;
   var current = null;
+  var playStart = null;     // waktu sentuhan pertama pada permainan yang sedang berjalan
 
   /* ---------- kuis (dipakai pre-task dan post-task, desain sama dengan kuis di situs) ---------- */
   function makeQuiz(boxId, countId, errId) {
@@ -69,6 +70,13 @@
     if (!post.cards.length) post.render();
   }
 
+  function fmtMs(ms) {
+    if (ms == null) return "-";
+    var d = ms / 1000;
+    if (d < 60) return d.toFixed(1).replace(".", ",") + " dtk";
+    return Math.floor(d / 60) + " mnt " + Math.round(d % 60) + " dtk";
+  }
+
   /* hasil setelah post-task: skor pre, skor post, skor terbaik latihan memilah,
      lalu tandai jawaban benar dan salah beserta penjelasan dan jawaban pre-task di tiap soal */
   function showResult(r) {
@@ -91,13 +99,18 @@
     var t = r.top;
     $("res-top").hidden = !t;
     if (t) {
-      var names = t.names.join(", ");
-      if (t.count > t.names.length) names += " dan " + (t.count - t.names.length) + " lainnya";
-      $("res-top-names").textContent = names;
-      $("res-top-score").textContent = t.skor + " / " + t.total + " pada permainan pertama"
-        + (t.count > 1 ? ". Skor ini dicapai " + t.count + " peserta" : "")
-        + (t.me ? ". Termasuk kamu." : ".")
-        + (r.game && r.game.first != null ? " Permainan pertamamu: " + r.game.first + " / " + r.game.total + "." : "");
+      var ol = $("res-top-list"); ol.textContent = "";
+      t.list.forEach(function (row) {
+        var li = document.createElement("li"); if (row.me) li.className = "me";
+        var rk = document.createElement("span"); rk.className = "rk"; rk.textContent = "#" + row.rank;
+        var nm = document.createElement("span"); nm.className = "nm"; nm.textContent = row.nama + (row.me ? " (kamu)" : "");
+        var sc = document.createElement("span"); sc.className = "sc"; sc.textContent = row.skor + " / " + row.total + " \u00b7 " + fmtMs(row.ms);
+        li.appendChild(rk); li.appendChild(nm); li.appendChild(sc); ol.appendChild(li);
+      });
+      var note = "Dihitung dari permainan pertama. Skor sama dipecah waktu tercepat.";
+      if (t.myRank && t.myRank > 3) note += " Peringkatmu: #" + t.myRank + " dari " + t.count + " peserta.";
+      else if (!t.myRank && r.game && r.game.first != null) note += " Permainan pertamamu: " + r.game.first + " / " + r.game.total + ".";
+      $("res-top-score").textContent = note;
     }
     r.review.forEach(function (rv, i) {
       var c = post.cards[i]; if (!c) return;
@@ -129,9 +142,8 @@
   }
   function route() {
     if (!guest) return show("s0");
-    if (hasPost) return show("s3");
     if (!hasPre) return show("s1");
-    show(phase === "post" ? "s3" : "s2");
+    show(phase === "post" ? "s3" : "s2"); // yang sudah post-task ikut balik ke simulasi saat admin mengembalikan fase
   }
 
   /* kirim event dengan ack + timeout; aman dikirim ulang karena server menolak duplikat */
@@ -151,7 +163,7 @@
   /* sesi di-reset admin: hapus identitas lokal dan kembali ke layar nama */
   function resetLocal() {
     try { localStorage.removeItem(KEY); localStorage.removeItem("bsp-best"); } catch (e) {}
-    guest = null; phase = "simulator"; hasPre = false; hasPost = false; quiz = null;
+    guest = null; phase = "simulator"; hasPre = false; hasPost = false; quiz = null; playStart = null;
     $("f-gate").reset();
     pre.clear(); post.clear();
     $("post-done").hidden = true; $("post-actions").hidden = false;
@@ -181,13 +193,25 @@
 
   socket.on("connect", function () { $("conn").textContent = "Terhubung"; $("conn").classList.remove("off"); join(); });
   socket.on("disconnect", function () { $("conn").textContent = "Menyambung ulang..."; $("conn").classList.add("off"); });
-  socket.on("phase:change", function (p) { phase = p; route(); }); // perintah force redirect dari admin
+  socket.on("phase:change", function (p) { // perintah force redirect dari admin
+    phase = p;
+    route();
+    if (p === "post" && hasPost) join(); // yang sudah post-task: ambil ulang hasil supaya leaderboard terbaru
+  });
   socket.on("session:reset", resetLocal); // admin menekan clear memory
 
-  /* skor latihan memilah dikirim ke server tiap selesai main (server hanya menyimpan yang tertinggi) */
+  /* waktu satu permainan: dari sentuhan/klik pertama di area game sampai selesai */
+  function markStart() { if (playStart === null) playStart = Date.now(); }
+  $("game").addEventListener("pointerdown", markStart, true);
+  $("game").addEventListener("click", markStart, true); // keyboard
+
+  /* skor + waktu latihan memilah dikirim ke server tiap selesai main (leaderboard hanya memakai permainan pertama) */
   window.addEventListener("pilah:finish", function (e) {
     if (!guest || !e.detail) return;
-    socket.timeout(8000).emit("game:score", { skor: e.detail.skor, total: e.detail.total }, function (err, res) {
+    var payload = { skor: e.detail.skor, total: e.detail.total };
+    if (playStart !== null) payload.ms = Math.round(Date.now() - playStart);
+    playStart = null;
+    socket.timeout(8000).emit("game:score", payload, function (err, res) {
       if (!err && res && res.reset) resetLocal();
     });
   });

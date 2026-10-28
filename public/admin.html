@@ -92,7 +92,7 @@
     if (confirm("Semua user aktif akan langsung dipindah ke Post-Task. Lanjut?")) setPhase("post");
   });
   $("b-reset").addEventListener("click", function () {
-    if (confirm("Kembalikan fase ke Simulator? (untuk uji coba ulang)")) setPhase("simulator");
+    if (confirm("Kembalikan fase ke Simulator? Semua user, termasuk yang sudah selesai post-task, akan dipindah kembali ke simulasi.")) setPhase("simulator");
   });
 
   /* clear memory: hapus semua data user dan mulai kuis dari awal */

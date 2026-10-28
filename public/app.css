@@ -35,4 +35,9 @@ main.admin h2 { font-size: clamp(1.6rem, 4vw, 2.2rem); margin-bottom: 4px; }
 .res-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: 12px; }
 .result .res { background: var(--bg); border: 1px solid var(--line); padding: 14px; display: grid; gap: 6px; align-content: start; }
 .result .res .score { font-size: clamp(2rem, 8vw, 3rem); }
-.res-top .top-names { font: 800 clamp(1.5rem, 6vw, 2.3rem)/1.05 var(--font-display); font-stretch: 72%; text-transform: uppercase; overflow-wrap: anywhere; }
+.top-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.top-list li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); }
+.top-list li.me { border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent); }
+.top-list .rk { font: 500 1rem var(--font-mono); color: var(--muted); }
+.top-list .nm { font: 800 clamp(1.1rem, 4.5vw, 1.6rem)/1.1 var(--font-display); font-stretch: 72%; text-transform: uppercase; overflow-wrap: anywhere; }
+.top-list .sc { font: 500 0.85rem var(--font-mono); white-space: nowrap; }
