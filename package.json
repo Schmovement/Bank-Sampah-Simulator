@@ -1,0 +1,17 @@
+{
+  "name": "live-sync",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sinkronisasi real-time pre-task, simulator, post-task (Express + Socket.io + MongoDB)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongodb": "^6.8.0",
+    "socket.io": "^4.7.5"
+  }
+}
