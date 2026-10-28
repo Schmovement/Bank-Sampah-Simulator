@@ -61,7 +61,7 @@
       <div class="sec-head">
         <p class="eyebrow">Latihan memilah</p>
         <h1 class="pg">Seret sampah ke tong yang tepat</h1>
-        <p>Ada 12 benda yang biasa ditemui di kampus. Tahan benda 3D di tengah, seret ke salah satu dari empat tong, lalu lepas. Kalau salah, benda kembali dan kamu bisa mencoba lagi. Skor dihitung dari jawaban benar pada percobaan pertama. Setelah selesai, tunggu instruksi admin untuk lanjut ke post-task.</p>
+        <p>Ada 12 benda yang biasa ditemui di kampus. Tahan benda 3D di tengah, seret ke salah satu dari empat tong, lalu lepas. Kalau benar, benda berikutnya muncul otomatis. Kalau salah, benda kembali dan kamu bisa mencoba lagi. Skor dihitung dari jawaban benar pada percobaan pertama. Setelah selesai, kamu bisa main lagi atau membaca halaman info sambil menunggu instruksi admin untuk lanjut ke post-task.</p>
       </div>
 
       <div class="panel" id="game">
@@ -71,7 +71,6 @@
         <div id="g-play">
           <div id="sort-g-play">
             <div class="item-card"><div class="name" id="g-name"></div><p class="hint" id="g-hint"></p></div>
-            <div class="game-actions"><button type="button" class="btn primary" id="g-next" disabled>Sampah berikutnya</button></div>
           </div>
 
           <div class="stage" id="stage">
@@ -96,8 +95,8 @@
           <div class="score" id="r-score"></div>
           <p id="r-msg"></p>
           <p class="quiz-score" id="r-best"></p>
-          <div class="game-actions"><button type="button" class="btn primary" id="g-again">Main lagi</button></div>
-          <p class="note">Tunggu instruksi admin untuk lanjut ke post-task.</p>
+          <div class="game-actions"><button type="button" class="btn primary" id="g-again">Main lagi</button><a class="btn" href="info.html">Buka halaman info</a></div>
+          <p class="note">Kamu bisa main lagi atau membaca halaman info sambil menunggu instruksi admin untuk lanjut ke post-task.</p>
         </div>
       </div>
 
@@ -118,10 +117,19 @@
       </div>
 
       <div class="panel result" id="post-done" hidden>
-        <p class="eyebrow">Hasil post-task</p>
-        <div class="score" id="post-score"></div>
-        <p class="quiz-score" id="post-pre"></p>
-        <p>Terima kasih. Jawabanmu sudah tersimpan dan kamu boleh menutup halaman ini. Penjelasan tiap jawaban ada di bawah.</p>
+        <p class="eyebrow">Hasil kamu</p>
+        <div class="res-grid" id="res-grid">
+          <div class="res"><span class="eyebrow">Pre-task</span><div class="score" id="res-pre"></div></div>
+          <div class="res"><span class="eyebrow">Post-task</span><div class="score" id="res-post"></div></div>
+          <div class="res"><span class="eyebrow">Skor terbaik memilah sampah</span><div class="score" id="res-game"></div></div>
+        </div>
+        <p class="quiz-score" id="res-note"></p>
+        <div class="res res-top" id="res-top" hidden>
+          <span class="eyebrow">Skor first try terbaik dari semua peserta</span>
+          <div class="top-names" id="res-top-names"></div>
+          <p class="quiz-score" id="res-top-score"></p>
+        </div>
+        <p>Terima kasih. Jawabanmu sudah tersimpan dan kamu boleh menutup halaman ini. Jawaban benar dan penjelasan tiap soal ada di bawah.</p>
       </div>
 
       <form id="f-post" novalidate>

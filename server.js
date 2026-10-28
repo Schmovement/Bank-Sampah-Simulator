@@ -44,15 +44,47 @@ function cleanQuiz(d) {
   return { jawaban, skor };
 }
 
-// hasil post-task beserta pembahasan; dikirim hanya setelah post-task tersimpan
+// hasil lengkap, dikirim hanya setelah post-task tersimpan: skor pre, skor post, skor terbaik
+// latihan memilah, serta pembahasan tiap soal (jawaban pre dan post disandingkan dengan kunci)
 function buildResult(doc) {
   if (!doc || !doc.post || !Array.isArray(doc.post.jawaban)) return null;
+  const prePicks = doc.pre && Array.isArray(doc.pre.jawaban) ? doc.pre.jawaban : [];
+  const g = doc.game && Number.isInteger(doc.game.best) ? doc.game : null;
   return {
     skor: doc.post.skor,
     preSkor: doc.pre && Number.isInteger(doc.pre.skor) ? doc.pre.skor : null,
     total: QUIZ.length,
-    review: QUIZ.map((it, i) => ({ picked: doc.post.jawaban[i], a: it.a, t: it.t }))
+    game: g ? { best: g.best, first: Number.isInteger(g.first) ? g.first : null, total: g.total, plays: g.plays || 0 } : null,
+    review: QUIZ.map((it, i) => ({
+      picked: doc.post.jawaban[i],
+      prePicked: Number.isInteger(prePicks[i]) ? prePicks[i] : -1,
+      a: it.a,
+      t: it.t
+    }))
   };
+}
+
+// peserta dengan skor terbaik di PERMAINAN PERTAMA (game.first) dari semua peserta sesi ini.
+// Permainan ulang tidak dihitung, supaya adil bagi yang baru main sekali.
+async function topScorer(uid) {
+  const [top] = await users.find({ "game.first": { $exists: true } }, { projection: { "game.first": 1, "game.total": 1 } })
+    .sort({ "game.first": -1 }).limit(1).toArray();
+  if (!top || top.game.first < 1) return null; // belum ada yang mencetak skor
+  const skor = top.game.first;
+  const [winners, count, me] = await Promise.all([
+    users.find({ "game.first": skor }, { projection: { nama: 1 } }).sort({ nama: 1 }).limit(5).toArray(),
+    users.countDocuments({ "game.first": skor }),
+    users.countDocuments({ _id: uid, "game.first": skor })
+  ]);
+  return { skor, total: top.game.total, names: winners.map((w) => w.nama), count, me: me > 0 };
+}
+
+// hasil lengkap + peserta terbaik. Kegagalan mengambil peserta terbaik tidak boleh menggagalkan penyimpanan post-task.
+async function resultFor(doc, uid) {
+  const r = buildResult(doc);
+  if (!r) return null;
+  try { r.top = await topScorer(uid); } catch (e) { console.error("top:", e.message); r.top = null; }
+  return r;
 }
 
 /* ---------- state + database ---------- */
@@ -99,8 +131,9 @@ io.on("connection", (socket) => {
         { $set: { nama, lastSeen: new Date() }, $setOnInsert: { createdAt: new Date() } },
         { upsert: true }
       );
-      const doc = await users.findOne({ _id: uid }, { projection: { pre: 1, post: 1 } });
-      ack({ ok: true, sid: sessionId, phase, hasPre: !!doc.pre, hasPost: !!doc.post, quiz: PUBLIC_QUIZ, result: buildResult(doc) });
+      const doc = await users.findOne({ _id: uid }, { projection: { pre: 1, post: 1, game: 1 } });
+      const result = await resultFor(doc, uid);
+      ack({ ok: true, sid: sessionId, phase, hasPre: !!doc.pre, hasPost: !!doc.post, quiz: PUBLIC_QUIZ, result });
       pushStats();
     } catch (e) { console.error("join:", e.message); ack({ ok: false, error: "Server bermasalah." }); }
   });
@@ -134,16 +167,36 @@ io.on("connection", (socket) => {
       const doc = await users.findOneAndUpdate(
         { _id: uid, pre: { $exists: true }, post: { $exists: false } },
         { $set: { post, postAt: new Date() } },
-        { returnDocument: "after", projection: { pre: 1, post: 1 } }
+        { returnDocument: "after", projection: { pre: 1, post: 1, game: 1 } }
       );
       if (!doc) {
-        const cur = await users.findOne({ _id: uid }, { projection: { pre: 1, post: 1 } });
-        if (cur && cur.post) return ack({ ok: true, duplicate: true, result: buildResult(cur) });
+        const cur = await users.findOne({ _id: uid }, { projection: { pre: 1, post: 1, game: 1 } });
+        if (cur && cur.post) return ack({ ok: true, duplicate: true, result: await resultFor(cur, uid) });
         return ack({ ok: false, error: "Selesaikan pre-task terlebih dahulu." });
       }
-      ack({ ok: true, result: buildResult(doc) });
+      ack({ ok: true, result: await resultFor(doc, uid) });
       pushStats();
     } catch (e) { console.error("post:", e.message); ack({ ok: false, error: "Gagal menyimpan." }); }
+  });
+
+  /* skor latihan memilah: simpan skor permainan pertama (sekali), skor terbaik pribadi, dan jumlah permainan.
+     Setelah post-task tersimpan, skor tidak diubah lagi. */
+  socket.on("game:score", async (data, ack = noop) => {
+    try {
+      const uid = socket.data.uid;
+      if (!uid) return ack({ ok: false, error: "Belum masuk sesi." });
+      if (socket.data.sid !== sessionId) return ack({ ok: false, reset: true });
+      const skor = data && data.skor, total = data && data.total;
+      if (!Number.isInteger(skor) || !Number.isInteger(total) || total < 1 || total > 50 || skor < 0 || skor > total) {
+        return ack({ ok: false, error: "Skor tidak valid." });
+      }
+      const mine = { _id: uid, pre: { $exists: true }, post: { $exists: false } };
+      // skor permainan pertama: ditulis sekali saja, tidak pernah diubah oleh permainan berikutnya
+      await users.updateOne({ ...mine, "game.first": { $exists: false } }, { $set: { "game.first": skor } });
+      // skor terbaik pribadi (hanya naik) dan jumlah permainan
+      await users.updateOne(mine, { $max: { "game.best": skor }, $set: { "game.total": total, "game.lastAt": new Date() }, $inc: { "game.plays": 1 } });
+      ack({ ok: true });
+    } catch (e) { console.error("game:", e.message); ack({ ok: false, error: "Gagal menyimpan." }); }
   });
 
   /* ---- admin ---- */

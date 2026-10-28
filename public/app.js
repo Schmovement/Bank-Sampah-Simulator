@@ -69,16 +69,36 @@
     if (!post.cards.length) post.render();
   }
 
-  /* hasil post-task: tandai jawaban benar dan salah, tampilkan penjelasan */
+  /* hasil setelah post-task: skor pre, skor post, skor terbaik latihan memilah,
+     lalu tandai jawaban benar dan salah beserta penjelasan dan jawaban pre-task di tiap soal */
   function showResult(r) {
     $("post-done").hidden = false;
     $("post-actions").hidden = true;
     $("post-intro").textContent = "Post-task selesai.";
     $("err3").textContent = "";
-    if (!r) { $("post-score").hidden = true; $("post-pre").textContent = ""; return; }
-    $("post-score").hidden = false;
-    $("post-score").textContent = r.skor + " / " + r.total;
-    $("post-pre").textContent = r.preSkor === null || r.preSkor === undefined ? "" : "Skor pre-task: " + r.preSkor + " dari " + r.total + ".";
+    if (!r) { $("res-grid").hidden = true; $("res-note").textContent = ""; $("res-top").hidden = true; return; }
+    $("res-grid").hidden = false;
+    $("res-pre").textContent = r.preSkor == null ? "-" : r.preSkor + " / " + r.total;
+    $("res-post").textContent = r.skor + " / " + r.total;
+    $("res-game").textContent = r.game ? r.game.best + " / " + r.game.total : "Belum main";
+    if (r.preSkor == null) { $("res-note").textContent = ""; }
+    else {
+      var d = r.skor - r.preSkor;
+      $("res-note").textContent = d > 0 ? "Skor post-task naik " + d + " poin dibanding pre-task."
+        : d === 0 ? "Skor post-task sama dengan pre-task."
+        : "Skor post-task turun " + (-d) + " poin dibanding pre-task.";
+    }
+    var t = r.top;
+    $("res-top").hidden = !t;
+    if (t) {
+      var names = t.names.join(", ");
+      if (t.count > t.names.length) names += " dan " + (t.count - t.names.length) + " lainnya";
+      $("res-top-names").textContent = names;
+      $("res-top-score").textContent = t.skor + " / " + t.total + " pada permainan pertama"
+        + (t.count > 1 ? ". Skor ini dicapai " + t.count + " peserta" : "")
+        + (t.me ? ". Termasuk kamu." : ".")
+        + (r.game && r.game.first != null ? " Permainan pertamamu: " + r.game.first + " / " + r.game.total + "." : "");
+    }
     r.review.forEach(function (rv, i) {
       var c = post.cards[i]; if (!c) return;
       c.btns.forEach(function (b, bi) {
@@ -88,7 +108,12 @@
         if (bi === rv.a) b.classList.add("right");
         if (bi === rv.picked && rv.picked !== rv.a) b.classList.add("wrong");
       });
-      c.why.textContent = (rv.picked === rv.a ? "Benar. " : "Belum tepat. ") + rv.t;
+      c.why.textContent = "";
+      c.why.appendChild(document.createTextNode((rv.picked === rv.a ? "Benar. " : "Belum tepat. ") + rv.t));
+      if (quiz && quiz[i] && rv.prePicked >= 0 && quiz[i].o[rv.prePicked] !== undefined) {
+        c.why.appendChild(document.createElement("br"));
+        c.why.appendChild(document.createTextNode("Jawaban pre-task: " + quiz[i].o[rv.prePicked] + (rv.prePicked === rv.a ? " (tepat)" : " (belum tepat)")));
+      }
     });
   }
 
@@ -125,7 +150,7 @@
 
   /* sesi di-reset admin: hapus identitas lokal dan kembali ke layar nama */
   function resetLocal() {
-    try { localStorage.removeItem(KEY); } catch (e) {}
+    try { localStorage.removeItem(KEY); localStorage.removeItem("bsp-best"); } catch (e) {}
     guest = null; phase = "simulator"; hasPre = false; hasPost = false; quiz = null;
     $("f-gate").reset();
     pre.clear(); post.clear();
@@ -159,11 +184,20 @@
   socket.on("phase:change", function (p) { phase = p; route(); }); // perintah force redirect dari admin
   socket.on("session:reset", resetLocal); // admin menekan clear memory
 
+  /* skor latihan memilah dikirim ke server tiap selesai main (server hanya menyimpan yang tertinggi) */
+  window.addEventListener("pilah:finish", function (e) {
+    if (!guest || !e.detail) return;
+    socket.timeout(8000).emit("game:score", { skor: e.detail.skor, total: e.detail.total }, function (err, res) {
+      if (!err && res && res.reset) resetLocal();
+    });
+  });
+
   /* Layar 0: nama */
   $("f-gate").addEventListener("submit", function (e) {
     e.preventDefault();
     var nama = $("nama").value.trim();
     if (nama.length < 2) { $("err0").textContent = "Nama minimal 2 karakter."; return; }
+    try { localStorage.removeItem("bsp-best"); } catch (er) {} // skor terbaik milik peserta sebelumnya di perangkat ini
     guest = { uid: randId(), nama: nama };
     try { localStorage.setItem(KEY, JSON.stringify(guest)); } catch (er) {}
     $("err0").textContent = "";

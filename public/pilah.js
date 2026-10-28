@@ -395,26 +395,27 @@ window.initPilah = function () {
   if (!has3D) { View = fallbackView(); $("stage").hidden = true; $("nogl").hidden = false; }
 
   /* ================= logika permainan ================= */
-  var order, idx, score, attempts, canAnswer, busy = false;
+  var order, idx, score, attempts, canAnswer, busy = false, advTimer = null;
+  var AUTO_NEXT_MS = 1200; // jeda (ms) sebelum otomatis pindah ke sampah berikutnya setelah jawaban benar
   function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   function binBtns() { return Array.prototype.slice.call(document.querySelectorAll("#g-bins .bin")); }
   function setBtns(on) { binBtns().forEach(function (b) { b.disabled = !on; }); }
 
   function startGame() {
+    if (advTimer) { clearTimeout(advTimer); advTimer = null; }
     order = shuffle(ITEMS); idx = 0; score = 0;
     $("g-result").hidden = true; $("g-play").hidden = false;
-    showItem();
+    showItem(false);
   }
-  function showItem() {
+  function showItem(keepFeedback) {
     var it = order[idx];
     attempts = 0; canAnswer = true; busy = false;
     $("g-name").textContent = it.n; $("g-hint").textContent = it.h;
     $("g-count").textContent = "Sampah " + (idx + 1) + " dari " + order.length;
     $("g-score").textContent = "Benar: " + score;
     $("g-bar").style.width = (idx / order.length * 100) + "%";
-    $("g-fb").textContent = "Seret benda ke tong yang tepat, atau pilih lewat tombol di bawah.";
-    $("g-next").disabled = true;
-    $("g-next").textContent = idx === order.length - 1 ? "Lihat hasil" : "Sampah berikutnya";
+    // setelah jawaban benar, penjelasan sebelumnya tetap tampil supaya sempat dibaca
+    if (!keepFeedback) $("g-fb").textContent = "Seret benda ke tong yang tepat, atau pilih lewat tombol di bawah.";
     setBtns(true);
     View.spawn(it);
   }
@@ -431,13 +432,16 @@ window.initPilah = function () {
         canAnswer = false;
         $("g-score").textContent = "Benar: " + score;
         s.className = "ok"; s.textContent = attempts === 0 ? "Tepat. " : "Sekarang tepat. ";
-        $("g-next").disabled = false; $("g-next").focus();
+        advTimer = setTimeout(function () { // otomatis lanjut, tanpa tombol
+          advTimer = null;
+          if (idx < order.length - 1) { idx++; showItem(true); } else finish();
+        }, AUTO_NEXT_MS);
       } else {
         attempts++;
         s.className = "no"; s.textContent = "Kurang tepat. Jawabannya " + CATS[it.c] + ". ";
         View.hint(it.c); setBtns(true);
       }
-      fb.appendChild(s); fb.appendChild(document.createTextNode(it.t));
+      fb.appendChild(s); fb.appendChild(document.createTextNode((ok ? it.n + ": " : "") + it.t));
     });
     return true;
   }
@@ -449,11 +453,12 @@ window.initPilah = function () {
     var best = score;
     try { var prev = parseInt(localStorage.getItem("bsp-best") || "0", 10); if (prev > best) best = prev; localStorage.setItem("bsp-best", String(best)); } catch (e) {}
     $("r-best").textContent = "Skor terbaikmu di perangkat ini: " + best + " / " + order.length;
+    // app.js mengirim skor ke server (yang disimpan: skor tertinggi)
+    try { window.dispatchEvent(new CustomEvent("pilah:finish", { detail: { skor: score, total: order.length } })); } catch (e) {}
   }
 
   View.setReleaseHandler(answer);
   binBtns().forEach(function (b) { b.addEventListener("click", function () { answer(b.getAttribute("data-c")); }); });
-  $("g-next").addEventListener("click", function () { if (idx < order.length - 1) { idx++; showItem(); } else finish(); });
   $("g-again").addEventListener("click", startGame);
   startGame();
   return { restart: startGame };
