@@ -27,7 +27,7 @@ const sha = (s) => crypto.createHash("sha256").update(String(s)).digest();
 const validAdmin = (key) => typeof key === "string" && crypto.timingSafeEqual(sha(key), sha(ADMIN_KEY));
 const str = (v, max) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 const isUid = (v) => typeof v === "string" && /^[a-z0-9]{16,40}$/.test(v);
-const noop = () => {};
+const noop = () => { };
 const MAX_MS = 3600000; // batas wajar waktu satu permainan: 1 jam
 
 /* Pre-task dan post-task memakai soal yang sama (quiz-data.js).
@@ -229,6 +229,13 @@ io.on("connection", (socket) => {
       ack({ ok: true, phase });
       pushStats();
     } catch (e) { console.error("set-phase:", e.message); ack({ ok: false, error: "Server bermasalah." }); }
+  });
+
+  socket.on("admin:goto-info", (ack = noop) => {
+    if (!socket.data.admin) return ack({ ok: false, error: "Unauthorized" });
+    console.log("admin menekan tombol info");
+    io.to("users").emit("goto:info");
+    ack({ ok: true });
   });
 
   /* clear memory: arsipkan semua data user, hapus, lalu mulai sesi baru dari awal */

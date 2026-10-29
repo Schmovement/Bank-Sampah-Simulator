@@ -1,121 +1,133 @@
 <!doctype html>
 <html lang="id">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="robots" content="noindex">
-<title>Admin | Bank Sampah Simulator</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,600..900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="app.css">
-<script src="theme.js" defer></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <title>Admin | Bank Sampah Simulator</title>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,600..900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="app.css">
+  <script src="theme.js" defer></script>
 </head>
+
 <body>
-<div class="wrap">
-  <header class="top">
-    <div class="brand">Bank Sampah Simulator &middot; Admin</div>
-    <nav aria-label="Pengaturan">
-      <span class="conn off" id="conn" role="status">Menyambung...</span>
-      <button type="button" class="theme-btn" id="theme-toggle" aria-pressed="false"><i aria-hidden="true"></i><span>Mode gelap</span></button>
-    </nav>
-  </header>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand">Bank Sampah Simulator &middot; Admin</div>
+      <nav aria-label="Pengaturan">
+        <span class="conn off" id="conn" role="status">Menyambung...</span>
+        <button type="button" class="theme-btn" id="theme-toggle" aria-pressed="false"><i
+            aria-hidden="true"></i><span>Mode gelap</span></button>
+      </nav>
+    </header>
 
-  <main class="admin">
-    <form class="panel" id="login">
-      <p class="eyebrow">Akses admin</p>
-      <h2>Masuk admin</h2>
-      <label class="lbl" for="key">Kunci admin</label>
-      <input class="field" type="password" id="key" autocomplete="current-password" required>
-      <div class="game-actions"><button class="btn primary" type="submit">Masuk</button></div>
-      <p class="err" id="err" role="alert"></p>
-    </form>
+    <main class="admin">
+      <form class="panel" id="login">
+        <p class="eyebrow">Akses admin</p>
+        <h2>Masuk admin</h2>
+        <label class="lbl" for="key">Kunci admin</label>
+        <input class="field" type="password" id="key" autocomplete="current-password" required>
+        <div class="game-actions"><button class="btn primary" type="submit">Masuk</button></div>
+        <p class="err" id="err" role="alert"></p>
+      </form>
 
-    <div id="panel" hidden style="display:grid;gap:16px">
-      <div class="panel">
-        <p class="eyebrow">Fase saat ini</p>
-        <div class="phase" id="phase">-</div>
+      <div id="panel" hidden style="display:grid;gap:16px">
+        <div class="panel">
+          <p class="eyebrow">Fase saat ini</p>
+          <div class="phase" id="phase">-</div>
+        </div>
+
+        <div class="stats">
+          <div class="stat"><b id="online">0</b>Online</div>
+          <div class="stat"><b id="total">0</b>Terdaftar</div>
+          <div class="stat"><b id="pre">0</b>Selesai pre</div>
+          <div class="stat"><b id="post">0</b>Selesai post</div>
+        </div>
+
+        <button class="btn danger" id="b-post" type="button">PAKSA SEMUA USER KE POST-TASK</button>
+
+        <div class="row-btns">
+          <button class="btn" id="b-reset" type="button">Kembalikan ke Simulator</button>
+          <button class="btn" id="b-dl" type="button">Unduh data (JSON)</button>
+          <button class="btn warn" id="b-clear" type="button">Clear memory (reset kuis)</button>
+          <button class="btn" id="b-info" type="button">Arahkan yang sudah post-test ke halaman info</button>
+        </div>
+        <p class="ok" id="ok2" aria-live="polite"></p>
+        <p class="err" id="err2" role="alert"></p>
       </div>
+    </main>
+  </div>
 
-      <div class="stats">
-        <div class="stat"><b id="online">0</b>Online</div>
-        <div class="stat"><b id="total">0</b>Terdaftar</div>
-        <div class="stat"><b id="pre">0</b>Selesai pre</div>
-        <div class="stat"><b id="post">0</b>Selesai post</div>
-      </div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      var $ = function (id) { return document.getElementById(id); };
+      var socket = io(), key = "";
 
-      <button class="btn danger" id="b-post" type="button">PAKSA SEMUA USER KE POST-TASK</button>
-
-      <div class="row-btns">
-        <button class="btn" id="b-reset" type="button">Kembalikan ke Simulator</button>
-        <button class="btn" id="b-dl" type="button">Unduh data (JSON)</button>
-        <button class="btn warn" id="b-clear" type="button">Clear memory (reset kuis)</button>
-      </div>
-      <p class="ok" id="ok2" aria-live="polite"></p>
-      <p class="err" id="err2" role="alert"></p>
-    </div>
-  </main>
-</div>
-
-<script src="/socket.io/socket.io.js"></script>
-<script>
-(function () {
-  "use strict";
-  var $ = function (id) { return document.getElementById(id); };
-  var socket = io(), key = "";
-
-  function auth() {
-    socket.emit("admin:auth", key, function (res) {
-      if (res && res.ok) {
-        $("login").hidden = true; $("panel").hidden = false; $("err").textContent = "";
-      } else {
-        key = ""; $("err").textContent = "Kunci admin salah.";
+      function auth() {
+        socket.emit("admin:auth", key, function (res) {
+          if (res && res.ok) {
+            $("login").hidden = true; $("panel").hidden = false; $("err").textContent = "";
+          } else {
+            key = ""; $("err").textContent = "Kunci admin salah.";
+          }
+        });
       }
-    });
-  }
-  $("login").addEventListener("submit", function (e) { e.preventDefault(); key = $("key").value; auth(); });
-  socket.on("connect", function () { $("conn").textContent = "Terhubung"; $("conn").classList.remove("off"); if (key) auth(); }); // masuk ulang otomatis kalau koneksi putus
-  socket.on("disconnect", function () { $("conn").textContent = "Menyambung ulang..."; $("conn").classList.add("off"); });
+      $("login").addEventListener("submit", function (e) { e.preventDefault(); key = $("key").value; auth(); });
+      socket.on("connect", function () { $("conn").textContent = "Terhubung"; $("conn").classList.remove("off"); if (key) auth(); }); // masuk ulang otomatis kalau koneksi putus
+      socket.on("disconnect", function () { $("conn").textContent = "Menyambung ulang..."; $("conn").classList.add("off"); });
 
-  socket.on("stats", function (s) {
-    $("phase").textContent = s.phase === "post" ? "POST-TASK" : "SIMULATOR";
-    $("online").textContent = s.online; $("total").textContent = s.total;
-    $("pre").textContent = s.preDone; $("post").textContent = s.postDone;
-  });
+      socket.on("stats", function (s) {
+        $("phase").textContent = s.phase === "post" ? "POST-TASK" : "SIMULATOR";
+        $("online").textContent = s.online; $("total").textContent = s.total;
+        $("pre").textContent = s.preDone; $("post").textContent = s.postDone;
+      });
 
-  function setPhase(p) {
-    $("err2").textContent = "";
-    socket.emit("admin:set-phase", p, function (res) {
-      if (!res || !res.ok) $("err2").textContent = (res && res.error) || "Gagal mengubah fase.";
-    });
-  }
-  $("b-post").addEventListener("click", function () {
-    if (confirm("Semua user aktif akan langsung dipindah ke Post-Task. Lanjut?")) setPhase("post");
-  });
-  $("b-reset").addEventListener("click", function () {
-    if (confirm("Kembalikan fase ke Simulator? Semua user, termasuk yang sudah selesai post-task, akan dipindah kembali ke simulasi.")) setPhase("simulator");
-  });
+      function setPhase(p) {
+        $("err2").textContent = "";
+        socket.emit("admin:set-phase", p, function (res) {
+          if (!res || !res.ok) $("err2").textContent = (res && res.error) || "Gagal mengubah fase.";
+        });
+      }
+      $("b-post").addEventListener("click", function () {
+        if (confirm("Semua user aktif akan langsung dipindah ke Post-Task. Lanjut?")) setPhase("post");
+      });
+      $("b-reset").addEventListener("click", function () {
+        if (confirm("Kembalikan fase ke Simulator? Semua user, termasuk yang sudah selesai post-task, akan dipindah kembali ke simulasi.")) setPhase("simulator");
+      });
 
-  /* clear memory: hapus semua data user dan mulai kuis dari awal */
-  $("b-clear").addEventListener("click", function () {
-    var t = prompt("Ini menghapus SEMUA data user dan mengembalikan semua orang ke halaman nama.\n(Data lama diarsipkan di database, tapi unduh JSON dulu untuk jaga-jaga.)\n\nKetik RESET untuk lanjut:");
-    if (t !== "RESET") return;
-    $("err2").textContent = ""; $("ok2").textContent = "";
-    socket.emit("admin:reset", function (res) {
-      if (res && res.ok) $("ok2").textContent = "Reset selesai. " + res.cleared + " data diarsipkan, kuis dimulai dari awal.";
-      else $("err2").textContent = (res && res.error) || "Gagal reset.";
-    });
-  });
+      $("b-info").addEventListener("click", function () {
+        socket.emit("admin:goto-info", function (res) {
+          console.log("balasan server:", res);
+        });
+      });
 
-  $("b-dl").addEventListener("click", function () {
-    fetch("/api/export", { headers: { "x-admin-key": key } })
-      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.blob(); })
-      .then(function (b) {
-        var a = document.createElement("a");
-        a.href = URL.createObjectURL(b); a.download = "hasil.json"; a.click();
-      })
-      .catch(function () { $("err2").textContent = "Gagal mengunduh data."; });
-  });
-})();
-</script>
+      /* clear memory: hapus semua data user dan mulai kuis dari awal */
+      $("b-clear").addEventListener("click", function () {
+        var t = prompt("Ini menghapus SEMUA data user dan mengembalikan semua orang ke halaman nama.\n(Data lama diarsipkan di database, tapi unduh JSON dulu untuk jaga-jaga.)\n\nKetik RESET untuk lanjut:");
+        if (t !== "RESET") return;
+        $("err2").textContent = ""; $("ok2").textContent = "";
+        socket.emit("admin:reset", function (res) {
+          if (res && res.ok) $("ok2").textContent = "Reset selesai. " + res.cleared + " data diarsipkan, kuis dimulai dari awal.";
+          else $("err2").textContent = (res && res.error) || "Gagal reset.";
+        });
+      });
+
+      $("b-dl").addEventListener("click", function () {
+        fetch("/api/export", { headers: { "x-admin-key": key } })
+          .then(function (r) { if (!r.ok) throw new Error(r.status); return r.blob(); })
+          .then(function (b) {
+            var a = document.createElement("a");
+            a.href = URL.createObjectURL(b); a.download = "hasil.json"; a.click();
+          })
+          .catch(function () { $("err2").textContent = "Gagal mengunduh data."; });
+      });
+    })();
+  </script>
 </body>
+
 </html>

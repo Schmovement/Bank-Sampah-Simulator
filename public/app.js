@@ -12,7 +12,7 @@
     return Array.prototype.map.call(a, function (b) { return ("0" + b.toString(16)).slice(-2); }).join("");
   }
   var guest = null;
-  try { guest = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+  try { guest = JSON.parse(localStorage.getItem(KEY)); } catch (e) { }
   if (!guest || !guest.uid || !guest.nama) guest = null;
 
   var phase = "simulator", hasPre = false, hasPost = false;
@@ -94,7 +94,7 @@
       var d = r.skor - r.preSkor;
       $("res-note").textContent = d > 0 ? "Skor post-task naik " + d + " poin dibanding pre-task."
         : d === 0 ? "Skor post-task sama dengan pre-task."
-        : "Skor post-task turun " + (-d) + " poin dibanding pre-task.";
+          : "Skor post-task turun " + (-d) + " poin dibanding pre-task.";
     }
     var t = r.top;
     $("res-top").hidden = !t;
@@ -162,7 +162,7 @@
 
   /* sesi di-reset admin: hapus identitas lokal dan kembali ke layar nama */
   function resetLocal() {
-    try { localStorage.removeItem(KEY); localStorage.removeItem("bsp-best"); } catch (e) {}
+    try { localStorage.removeItem(KEY); localStorage.removeItem("bsp-best"); } catch (e) { }
     guest = null; phase = "simulator"; hasPre = false; hasPost = false; quiz = null; playStart = null;
     $("f-gate").reset();
     pre.clear(); post.clear();
@@ -181,7 +181,7 @@
       if (!res || !res.ok) { $("err0").textContent = (res && res.error) || "Gagal masuk sesi."; show("s0"); return; }
       if (res.sid && guest.sid !== res.sid) {
         guest.sid = res.sid;
-        try { localStorage.setItem(KEY, JSON.stringify(guest)); } catch (e) {}
+        try { localStorage.setItem(KEY, JSON.stringify(guest)); } catch (e) { }
       }
       phase = res.phase; hasPre = res.hasPre; hasPost = res.hasPost;
       if (res.quiz && !quiz) quiz = res.quiz;
@@ -198,6 +198,11 @@
     route();
     if (p === "post" && hasPost) join(); // yang sudah post-task: ambil ulang hasil supaya leaderboard terbaru
   });
+
+  socket.on("goto:info", function () {
+    if (guest && hasPost && phase !== "post") location.href = "info.html";
+  });
+
   socket.on("session:reset", resetLocal); // admin menekan clear memory
 
   /* waktu satu permainan: dari sentuhan/klik pertama di area game sampai selesai */
@@ -221,9 +226,9 @@
     e.preventDefault();
     var nama = $("nama").value.trim();
     if (nama.length < 2) { $("err0").textContent = "Nama minimal 2 karakter."; return; }
-    try { localStorage.removeItem("bsp-best"); } catch (er) {} // skor terbaik milik peserta sebelumnya di perangkat ini
+    try { localStorage.removeItem("bsp-best"); } catch (er) { } // skor terbaik milik peserta sebelumnya di perangkat ini
     guest = { uid: randId(), nama: nama };
-    try { localStorage.setItem(KEY, JSON.stringify(guest)); } catch (er) {}
+    try { localStorage.setItem(KEY, JSON.stringify(guest)); } catch (er) { }
     $("err0").textContent = "";
     if (socket.connected) join(); // kalau belum tersambung, handler "connect" yang memanggil join()
   });
