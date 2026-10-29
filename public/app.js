@@ -200,7 +200,7 @@
   });
 
   socket.on("goto:info", function () {
-    if (guest && hasPost && phase !== "post") location.href = "info.html";
+    if (guest && hasPost) location.href = "info.html";
   });
 
   socket.on("session:reset", resetLocal); // admin menekan clear memory
