@@ -27,7 +27,7 @@
         <div>
           <p class="eyebrow" style="margin-bottom:16px">To make a better world, starts with you</p>
           <h1>Sampah juga punya harga</h1>
-          <p class="lead">Masukkan nama lengkapmu untuk masuk ke sesi. Kamu akan mengerjakan pre-task, latihan memilah sampah 3D, lalu post-task.</p>
+          <p class="lead">Masukkan nama lengkapmu untuk masuk ke sesi. Kamu akan mengerjakan pre-task, latihan memilah sampah 3D, membaca info daur ulang, lalu post-task.</p>
         </div>
         <form class="panel" id="f-gate" autocomplete="off">
           <p class="eyebrow">Masuk sesi</p>
@@ -61,7 +61,7 @@
       <div class="sec-head">
         <p class="eyebrow">Latihan memilah</p>
         <h1 class="pg">Seret sampah ke tong yang tepat</h1>
-        <p>Ada 12 benda yang biasa ditemui di kampus. Tahan benda 3D di tengah, seret ke salah satu dari empat tong, lalu lepas. Kalau benar, benda berikutnya muncul otomatis. Kalau salah, benda kembali dan kamu bisa mencoba lagi. Skor dihitung dari jawaban benar pada percobaan pertama. Setelah selesai, kamu bisa main lagi atau membaca halaman info sambil menunggu instruksi admin untuk lanjut ke post-task.</p>
+        <p>Ada 12 benda yang biasa ditemui di kampus. Tahan benda 3D di tengah, seret ke salah satu dari empat tong, lalu lepas. Kalau benar, benda berikutnya muncul otomatis. Kalau salah, benda kembali dan kamu bisa mencoba lagi. Skor dihitung dari jawaban benar pada percobaan pertama. Setelah selesai, kamu bisa main lagi atau lanjut membaca info daur ulang.</p>
       </div>
 
       <div class="panel" id="game">
@@ -95,8 +95,8 @@
           <div class="score" id="r-score"></div>
           <p id="r-msg"></p>
           <p class="quiz-score" id="r-best"></p>
-          <div class="game-actions"><button type="button" class="btn primary" id="g-again">Main lagi</button><a class="btn" href="info.html">Buka halaman info</a></div>
-          <p class="note">Kamu bisa main lagi atau membaca halaman info sambil menunggu instruksi admin untuk lanjut ke post-task.</p>
+          <div class="game-actions"><button type="button" class="btn primary" id="g-next">Lanjut ke info daur ulang</button><button type="button" class="btn" id="g-again">Main lagi</button></div>
+          <p class="note">Kamu bisa main lagi untuk memperbaiki skor, atau lanjut membaca info daur ulang.</p>
         </div>
       </div>
 
@@ -107,6 +107,102 @@
         <div><strong><i class="chip" style="background:var(--c-b3)"></i>B3</strong>Baterai, lampu, bahan kimia. Jangan dicampur dengan sampah lain.</div>
       </div>
     </section>
+
+    <!-- Layar info: materi bank sampah dan daur ulang (setelah latihan memilah, sebelum post-task) -->
+    <div class="screen" id="sinfo" hidden>
+      <section class="info-first">
+        <div class="sec-head">
+          <p class="eyebrow">Info daur ulang</p>
+          <h1 class="pg">Sampah juga punya harga</h1>
+          <p>Botol, kardus, dan kertas bekas yang kamu buang tiap hari masih bisa dijual dan dipakai ulang. Bank sampah mencatat setoranmu seperti tabungan. Baca materi di bawah, lalu tunggu instruksi admin untuk lanjut ke post-task.</p>
+        </div>
+        <ol class="flow">
+          <li><span class="k">Langkah 1</span><h3>Kurangi</h3><p>Bawa tumbler dan tas sendiri supaya sampah baru tidak terus bertambah.</p></li>
+          <li><span class="k">Langkah 2</span><h3>Pilah</h3><p>Pisahkan organik, anorganik, residu, dan B3 sejak dari tempat sampah.</p></li>
+          <li><span class="k">Langkah 3</span><h3>Bersihkan</h3><p>Bilas botol dan gelas, lalu keringkan. Sampah yang bersih lebih laku.</p></li>
+          <li><span class="k">Langkah 4</span><h3>Setor</h3><p>Bawa ke titik setor. Sampah ditimbang dan dicatat atas namamu.</p></li>
+          <li><span class="k">Langkah 5</span><h3>Manfaatkan</h3><p>Tukar saldo sesuai kesepakatan, atau olah sendiri jadi barang berguna.</p></li>
+        </ol>
+        <div class="why">
+          <div><h3>Lingkungan</h3><p>Sampah anorganik yang terpilah dapat didaur ulang, sehingga timbulan yang terbuang berkurang. Ini sejalan dengan SDG 12, konsumsi dan produksi yang bertanggung jawab.</p></div>
+          <div><h3>Kebiasaan</h3><p>Memilah di kampus melatih kebiasaan yang ikut terbawa ke rumah, kos, dan tempat kerja nanti.</p></div>
+          <div><h3>Kewargaan</h3><p>Mengurus sampah sendiri adalah bentuk tanggung jawab warga atas ruang hidup bersama.</p></div>
+        </div>
+      </section>
+
+      <section id="hitung">
+        <div class="sec-head">
+          <p class="eyebrow">Hitung setoran</p>
+          <h2>Berapa nilai sampahmu per bulan?</h2>
+          <p>Isi perkiraan berat sampah anorganik yang kamu kumpulkan dalam seminggu. Hasilnya dihitung untuk satu minggu dan satu bulan (4 minggu).</p>
+        </div>
+        <div class="calc">
+          <div class="panel">
+            <div class="rows" id="rows"></div>
+            <p class="note">Harga per kilogram hanya contoh untuk simulasi. Harga di titik setor ditentukan bersama warga kampus saat program berjalan dan bisa berubah.</p>
+          </div>
+          <div class="sum" aria-live="polite">
+            <p class="eyebrow">Saldo satu minggu</p>
+            <div class="big" id="c-week">Rp 0</div>
+            <div class="sem"><span class="eyebrow">Jika rutin 4 minggu</span><span id="c-sem">Rp 0</span></div>
+            <p class="note"><span id="c-kg">0</span> kg sampah terpilah per minggu tidak masuk ke tempat sampah campuran.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="daur">
+        <div class="sec-head">
+          <p class="eyebrow">Praktik daur ulang</p>
+          <h2>Olah sendiri jadi barang berguna</h2>
+          <p>Pilih satu dari empat proyek sederhana, siapkan bahannya, lalu kerjakan langkahnya secara virtual. Semuanya memakai sampah yang juga bisa disetor, jadi kamu bisa memilih menjual atau memakainya sendiri.</p>
+        </div>
+        <div class="panel sim" id="sim">
+          <div class="sim-tabs" id="sim-tabs" role="group" aria-label="Pilih proyek daur ulang"></div>
+          <div class="sim-body">
+            <div class="sim-stage">
+              <svg id="sim-svg" viewBox="0 0 400 260" role="img" aria-label="Simulasi daur ulang"></svg>
+              <p class="sim-cap" id="sim-cap"></p>
+            </div>
+            <div class="sim-ctrl">
+              <div class="progress" aria-hidden="true"><i id="sim-bar"></i></div>
+              <p class="eyebrow" id="sim-phase"></p>
+              <h3 id="sim-title"></h3>
+              <p id="sim-text"></p>
+              <p class="warn" id="sim-warn" hidden></p>
+              <div class="sim-opts" id="sim-opts"></div>
+              <div class="feedback" id="sim-fb" aria-live="polite" hidden></div>
+              <div class="game-actions" id="sim-actions"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="nilai">
+        <div class="sec-head">
+          <p class="eyebrow">Kewargaan ekologis</p>
+          <h2>Memilah juga latihan menjadi warga yang bertanggung jawab</h2>
+          <p>Kewargaan ekologis berarti menjalankan hak dan kewajiban sebagai warga untuk menjaga lingkungan, bukan hanya mengikuti aturan. Kebiasaan ini tumbuh bertahap: dari tahu, bisa, mau, sampai ikut bergerak.</p>
+        </div>
+        <div class="values">
+          <div><p class="eyebrow">Fase 1</p><h3>Pengetahuan</h3><p>Memahami jenis sampah dan nilainya lewat materi dan latihan.</p></div>
+          <div><p class="eyebrow">Fase 2</p><h3>Keterampilan</h3><p>Memilah dan mengolah sampah lewat praktik daur ulang.</p></div>
+          <div><p class="eyebrow">Fase 3</p><h3>Sikap</h3><p>Tumbuh rasa peduli dan bertanggung jawab atas sampah yang kita hasilkan.</p></div>
+          <div><p class="eyebrow">Fase 4</p><h3>Partisipasi</h3><p>Rutin menyetor, mengajak teman, dan ikut mengelola bank sampah bersama.</p></div>
+        </div>
+      </section>
+
+      <section class="info-foot">
+        <div class="panel" id="i-wait">
+          <p class="eyebrow">Selesai membaca?</p>
+          <p>Tunggu instruksi admin. Kamu akan otomatis dipindah ke post-task.</p>
+          <div class="game-actions"><button type="button" class="btn" id="i-back">Kembali ke latihan memilah</button></div>
+        </div>
+        <div class="panel" id="i-result" hidden>
+          <p class="eyebrow">Post-task sudah selesai</p>
+          <div class="game-actions"><button type="button" class="btn primary" id="i-res">Lihat hasilku</button></div>
+        </div>
+      </section>
+    </div>
 
     <!-- Layar 4: post-task (desain sama dengan pre-task) -->
     <section class="screen" id="s3" hidden>
@@ -151,6 +247,8 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="pilah.js"></script>
+<script src="script.js"></script>
+<script src="daur.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

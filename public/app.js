@@ -2,7 +2,8 @@
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
   var KEY = "sim-guest";
-  var SCREENS = ["s0", "s1", "s2", "s3"];
+  var STEP = "sim-step";   // "info" = peserta sudah lanjut dari latihan memilah ke info daur ulang
+  var SCREENS = ["s0", "s1", "s2", "sinfo", "s3"];
   var socket = io();
 
   /* identitas guest: User ID acak dibuat di browser, disimpan supaya refresh tidak membuat dokumen baru */
@@ -19,6 +20,8 @@
   var quiz = null;          // pertanyaan dan pilihan dari server (tanpa kunci jawaban)
   var pilah = null, pilahTried = false;
   var current = null;
+  function getStep() { try { return localStorage.getItem(STEP); } catch (e) { return null; } }
+  function setStep(v) { try { if (v) localStorage.setItem(STEP, v); else localStorage.removeItem(STEP); } catch (e) { } }
   var playStart = null;     // waktu sentuhan pertama pada permainan yang sedang berjalan
 
   /* ---------- kuis (dipakai pre-task dan post-task, desain sama dengan kuis di situs) ---------- */
@@ -135,6 +138,7 @@
     SCREENS.forEach(function (x) { $(x).hidden = x !== id; });
     if (current !== id) { current = id; window.scrollTo(0, 0); }
     // adegan 3D dibuat sekali, saat layar latihan pertama kali tampil (ukuran kanvas baru bisa dibaca saat terlihat)
+    if (id === "sinfo") { $("i-wait").hidden = hasPost; $("i-result").hidden = !hasPost; }
     if (id === "s2" && !pilahTried && window.initPilah) {
       pilahTried = true;
       try { pilah = window.initPilah(); } catch (e) { console.error("3D:", e); }
@@ -143,7 +147,10 @@
   function route() {
     if (!guest) return show("s0");
     if (!hasPre) return show("s1");
-    show(phase === "post" ? "s3" : "s2"); // yang sudah post-task ikut balik ke simulasi saat admin mengembalikan fase
+    if (phase === "post") return show("s3");
+    // urutan: pre-task, latihan memilah (s2), info daur ulang (sinfo), post-task (s3, dibuka admin)
+    // yang sudah post-task ikut balik ke simulasi saat admin mengembalikan fase
+    show(getStep() === "info" ? "sinfo" : "s2");
   }
 
   /* kirim event dengan ack + timeout; aman dikirim ulang karena server menolak duplikat */
@@ -163,6 +170,7 @@
   /* sesi di-reset admin: hapus identitas lokal dan kembali ke layar nama */
   function resetLocal() {
     try { localStorage.removeItem(KEY); localStorage.removeItem("bsp-best"); } catch (e) { }
+    setStep(null);
     guest = null; phase = "simulator"; hasPre = false; hasPost = false; quiz = null; playStart = null;
     $("f-gate").reset();
     pre.clear(); post.clear();
@@ -200,7 +208,7 @@
   });
 
   socket.on("goto:info", function () {
-    if (guest && hasPost) location.href = "info.html";
+    if (guest && hasPost) show("sinfo");
   });
 
   socket.on("session:reset", resetLocal); // admin menekan clear memory
@@ -227,11 +235,17 @@
     var nama = $("nama").value.trim();
     if (nama.length < 2) { $("err0").textContent = "Nama minimal 2 karakter."; return; }
     try { localStorage.removeItem("bsp-best"); } catch (er) { } // skor terbaik milik peserta sebelumnya di perangkat ini
+    setStep(null);
     guest = { uid: randId(), nama: nama };
     try { localStorage.setItem(KEY, JSON.stringify(guest)); } catch (er) { }
     $("err0").textContent = "";
     if (socket.connected) join(); // kalau belum tersambung, handler "connect" yang memanggil join()
   });
+
+  /* perpindahan latihan memilah <-> info daur ulang */
+  $("g-next").addEventListener("click", function () { setStep("info"); route(); });
+  $("i-back").addEventListener("click", function () { setStep(null); route(); });
+  $("i-res").addEventListener("click", function () { show("s3"); });
 
   /* Layar 1: pre-task */
   $("f-pre").addEventListener("submit", function (e) {

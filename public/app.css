@@ -41,3 +41,38 @@ main.admin h2 { font-size: clamp(1.6rem, 4vw, 2.2rem); margin-bottom: 4px; }
 .top-list .rk { font: 500 1rem var(--font-mono); color: var(--muted); }
 .top-list .nm { font: 800 clamp(1.1rem, 4.5vw, 1.6rem)/1.1 var(--font-display); font-stretch: 72%; text-transform: uppercase; overflow-wrap: anywhere; }
 .top-list .sc { font: 500 0.85rem var(--font-mono); white-space: nowrap; }
+
+/* layar info daur ulang: section di dalamnya mengikuti gaya halaman info lama */
+#sinfo > section { padding-block: 40px; }
+#sinfo > section.info-first { border-top: 0; padding-top: 36px; }
+#sinfo > section.info-foot { padding-block: 32px 56px; }
+#sinfo .panel p + .game-actions { margin-top: 16px; }
+
+/* simulasi virtual daur ulang */
+.sim-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 20px; }
+.sim-tab { text-align: left; font: 600 0.95rem var(--font-body); padding: 12px; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; cursor: pointer; display: grid; gap: 4px; align-content: start; min-height: 64px; }
+.sim-tab small { font: 400 0.72rem var(--font-mono); color: var(--muted); }
+.sim-tab:hover { border-color: var(--fg); }
+.sim-tab.on { border-color: var(--accent); background: var(--soft); box-shadow: inset 0 -4px 0 var(--accent); }
+.sim-tab.done span::after { content: " \2713"; color: var(--good); }
+.sim-body { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.sim-stage { border: 1px solid var(--line); background: var(--bg); }
+.sim-stage svg { display: block; width: 100%; height: auto; }
+.sim-cap { padding: 10px 12px; border-top: 1px solid var(--line); font-size: 0.9rem; color: var(--muted); min-height: 3.2em; }
+.sim-ctrl { display: grid; gap: 12px; align-content: start; }
+.sim-ctrl h3 { font-size: 1.6rem; }
+.sim-opts { display: grid; gap: 8px; }
+.sim-ctrl .feedback { margin-top: 0; }
+.sim-ctrl .game-actions { margin-top: 4px; }
+.sim-stage .tbl { fill: var(--soft); }
+.sim-stage .sh { fill: rgba(0, 0, 0, .18); }
+.sim-stage .o { stroke: var(--fg); stroke-width: 2; stroke-linejoin: round; }
+.sim-stage .t { fill: #fff; font: 700 13px var(--font-body); }
+.sim-stage .t2 { fill: var(--muted); font: 500 12px var(--font-mono); }
+.scene { animation: scene-in .35s ease-out; }
+@keyframes scene-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .scene { animation: none; } }
+@media (max-width: 860px) {
+  .sim-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sim-body { grid-template-columns: minmax(0, 1fr); }
+}
