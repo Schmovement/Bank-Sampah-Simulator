@@ -30,7 +30,7 @@
       show();
     });
   });
-  socket.on("phase:change", function (p) { if (p === "post" && !hasPost) leave(); }); // yang sudah post-task tidak diusir
+  socket.on("phase:change", function (p) { if (p === "post" || hasPost) leave(); }); // perintah admin menang: ke post, atau kembali ke simulasi untuk yang sudah post-test
   socket.on("session:reset", wipe);
 
   setTimeout(show, 10000); // jaring pengaman kalau server lambat merespons
