@@ -1,0 +1,78 @@
+/* Tambahan untuk halaman peserta dan admin. Token warna, tipografi, dan komponen dasar berasal dari style.css. */
+section.screen { border-top: 0; padding-block: 36px 56px; }
+section.screen#s0 { padding-block: 0; }
+h1.pg { font-size: clamp(2.3rem, 6.5vw, 3.8rem); text-transform: uppercase; }
+
+/* status koneksi di header */
+.conn { font: 500 0.75rem var(--font-mono); padding: 4px 10px; border-radius: 99px; background: var(--fg); color: var(--bg); }
+.conn.off { background: var(--bad); color: var(--bg); }
+
+/* form */
+.lbl { display: block; font-weight: 600; margin: 14px 0 6px; }
+.field { width: 100%; font: 500 1rem var(--font-body); padding: 11px 12px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 4px; min-height: 46px; }
+.err { color: var(--bad); min-height: 1.2em; margin-top: 12px; font-size: 0.95rem; }
+.ok { color: var(--good); min-height: 1.2em; margin-top: 12px; font-size: 0.95rem; }
+
+/* pilihan jawaban yang dipilih, belum diperiksa */
+.opt { width: 100%; }
+.opt.picked { border-color: var(--accent); background: var(--soft); box-shadow: inset 4px 0 0 var(--accent); }
+form .game-actions { margin-top: 20px; }
+#post-done { margin-bottom: 18px; }
+
+/* admin */
+main.admin { max-width: 640px; margin: 0 auto; display: grid; gap: 16px; padding-block: 32px 56px; }
+main.admin h2 { font-size: clamp(1.6rem, 4vw, 2.2rem); margin-bottom: 4px; }
+.phase { font: 500 2rem var(--font-mono); line-height: 1.1; margin-top: 6px; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.stat { background: var(--surface); border: 1px solid var(--line); padding: 14px; font: 500 0.75rem var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.stat b { display: block; font: 500 2rem var(--font-mono); letter-spacing: 0; text-transform: none; color: var(--fg); }
+.btn.danger { width: 100%; min-height: 84px; font-size: 1.1rem; letter-spacing: 0.02em; background: var(--c-b3); border-color: var(--c-b3); color: var(--on-b3); }
+.btn.warn { border-color: var(--bad); color: var(--bad); }
+.row-btns { display: flex; flex-wrap: wrap; gap: 10px; }
+@media (max-width: 480px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* hasil setelah post-task: pre, post, skor terbaik memilah */
+.res-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: 12px; }
+.result .res { background: var(--bg); border: 1px solid var(--line); padding: 14px; display: grid; gap: 6px; align-content: start; }
+.result .res .score { font-size: clamp(2rem, 8vw, 3rem); }
+.top-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.top-list li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); }
+.top-list li.me { border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent); }
+.top-list .rk { font: 500 1rem var(--font-mono); color: var(--muted); }
+.top-list .nm { font: 800 clamp(1.1rem, 4.5vw, 1.6rem)/1.1 var(--font-display); font-stretch: 72%; text-transform: uppercase; overflow-wrap: anywhere; }
+.top-list .sc { font: 500 0.85rem var(--font-mono); white-space: nowrap; }
+
+/* layar info daur ulang: section di dalamnya mengikuti gaya halaman info lama */
+#sinfo > section { padding-block: 40px; }
+#sinfo > section.info-first { border-top: 0; padding-top: 36px; }
+#sinfo > section.info-foot { padding-block: 32px 56px; }
+#sinfo .panel p + .game-actions { margin-top: 16px; }
+
+/* simulasi virtual daur ulang */
+.sim-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 20px; }
+.sim-tab { text-align: left; font: 600 0.95rem var(--font-body); padding: 12px; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; cursor: pointer; display: grid; gap: 4px; align-content: start; min-height: 64px; }
+.sim-tab small { font: 400 0.72rem var(--font-mono); color: var(--muted); }
+.sim-tab:hover { border-color: var(--fg); }
+.sim-tab.on { border-color: var(--accent); background: var(--soft); box-shadow: inset 0 -4px 0 var(--accent); }
+.sim-tab.done span::after { content: " \2713"; color: var(--good); }
+.sim-body { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.sim-stage { border: 1px solid var(--line); background: var(--bg); }
+.sim-stage svg { display: block; width: 100%; height: auto; }
+.sim-cap { padding: 10px 12px; border-top: 1px solid var(--line); font-size: 0.9rem; color: var(--muted); min-height: 3.2em; }
+.sim-ctrl { display: grid; gap: 12px; align-content: start; }
+.sim-ctrl h3 { font-size: 1.6rem; }
+.sim-opts { display: grid; gap: 8px; }
+.sim-ctrl .feedback { margin-top: 0; }
+.sim-ctrl .game-actions { margin-top: 4px; }
+.sim-stage .tbl { fill: var(--soft); }
+.sim-stage .sh { fill: rgba(0, 0, 0, .18); }
+.sim-stage .o { stroke: var(--fg); stroke-width: 2; stroke-linejoin: round; }
+.sim-stage .t { fill: #fff; font: 700 13px var(--font-body); }
+.sim-stage .t2 { fill: var(--muted); font: 500 12px var(--font-mono); }
+.scene { animation: scene-in .35s ease-out; }
+@keyframes scene-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .scene { animation: none; } }
+@media (max-width: 860px) {
+  .sim-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sim-body { grid-template-columns: minmax(0, 1fr); }
+}

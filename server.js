@@ -20,6 +20,7 @@ if (!MONGODB_URI || !ADMIN_KEY) {
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { maxHttpBufferSize: 1e5 }); // payload maks ~100 KB
+app.get("/info.html", (req, res) => res.redirect("/")); // info sudah digabung ke index.html
 app.use(express.static(path.join(__dirname, "public")));
 
 /* ---------- helpers ---------- */
