@@ -4,3 +4,4 @@ node_modules/
 __MACOSX/
 *.zip
 files/
+.Rhistory
