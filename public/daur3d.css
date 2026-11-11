@@ -1,0 +1,58 @@
+/* Latihan daur ulang 3D (pot dari botol dan tempat pensil dari kaleng).
+   Token warna dan komponen dasar dari style.css; .stage, .drag-tip, .nogl dari pilah.css; .feedback dari style.css.
+   Panel memakai kelas .d3-panel, jadi aturan di bawah berlaku untuk kedua praktik. */
+
+/* pembungkus: pilihan praktik, pesan, dan panel diberi jarak seragam */
+.d3-wrap { display: grid; gap: 18px; }
+.d3-wrap > .note { margin: 0; }
+
+/* kartu pilihan praktik */
+.d3-choose { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.d3-opt { --oc: var(--c-org); --oo: var(--on-org); position: relative; display: grid; gap: 8px; align-content: start; text-align: left; min-height: 140px; padding: 18px 20px 20px; font: inherit; color: var(--fg); background: var(--surface); border: var(--bw) solid var(--edge); border-radius: 22px 22px 22px 8px; cursor: pointer; box-shadow: 0 4px 0 var(--drop); transition: transform .1s, box-shadow .1s, background .15s; }
+.d3-opt[data-p="kaleng"] { --oc: var(--c-an); --oo: var(--on-an); border-radius: 22px 22px 8px 22px; }
+.d3-opt[data-p="kompos"] { --oc: var(--c-b3); --oo: var(--on-b3); border-radius: 8px 22px 22px 22px; }
+.d3-opt[data-p="ecobrick"] { --oc: var(--c-res); --oo: var(--on-res); border-radius: 22px 8px 22px 22px; }
+.d3-opt:hover { transform: translateY(-2px); box-shadow: 0 6px 0 var(--drop); }
+.d3-opt:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--drop); }
+.d3-opt .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 28px; }
+.d3-opt .k { display: inline-flex; align-items: center; padding: 2px 12px; border: var(--bw) solid var(--edge); border-radius: 99px; background: var(--oc); color: var(--oo); font: 700 0.8rem var(--font-body); }
+.d3-opt .tag { padding: 2px 12px; border: var(--bw) solid var(--good); border-radius: 99px; background: var(--surface); color: var(--good); font: 700 0.8rem var(--font-body); white-space: nowrap; }
+.d3-opt b { font: 800 clamp(1.2rem, 3.4vw, 1.6rem)/1.1 var(--font-display); letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.d3-opt small { font: 400 0.92rem/1.4 var(--font-body); color: var(--muted); }
+.d3-opt.on { background: var(--oc); color: var(--oo); }
+.d3-opt.on small { color: inherit; opacity: .9; }
+.d3-opt.on .k { background: var(--surface); color: var(--fg); }
+
+/* panel praktik */
+.d3-panel .d3-instr { display: grid; gap: 8px; margin-block: 16px 14px; min-height: 5.5rem; align-content: start; }
+.d3-panel .d3-instr h3 { font-size: 1.5rem; }
+.stage.d3-stage { height: clamp(380px, 64vh, 560px); }
+#d3-tip, #k3-tip, #c3-tip, #e3-tip { max-width: calc(100% - 20px); }
+#k3-fb, #c3-fb, #e3-fb { margin: 12px 0 14px; min-height: 3.2rem; display: block; line-height: 1.5; } /* sama dengan #d3-fb di style.css */
+#k3-fb[hidden], #c3-fb[hidden], #e3-fb[hidden] { display: block !important; visibility: hidden; } /* tinggi umpan balik dipertahankan, seperti #d3-fb di style.css */
+.feedback b.hint { color: var(--accent); }
+.d3-panel .game-actions { margin-top: 14px; }
+.btn.ghost { border-color: var(--line); color: var(--muted); font-weight: 500; box-shadow: none; }
+.btn.pulse { animation: d3-pulse 1.2s ease-in-out infinite; }
+@keyframes d3-pulse { 0%, 100% { box-shadow: 0 3px 0 var(--drop), 0 0 0 0 transparent; } 50% { box-shadow: 0 3px 0 var(--drop), 0 0 0 5px var(--soft), 0 0 0 7px var(--accent); } }
+@media (prefers-reduced-motion: reduce) { .btn.pulse { animation: none; outline: 3px solid var(--accent); } .d3-opt { transition: none; } }
+
+/* tablet dan ponsel besar: tetap dua kolom, jarak lebih rapat */
+@media (max-width: 860px) {
+  .d3-choose { gap: 12px; }
+  .d3-opt { min-height: 128px; padding: 16px 16px 18px; }
+}
+/* ponsel: kartu ditumpuk, tombol bantu dua-dua, tombol Lanjut selebar penuh */
+@media (max-width: 640px) {
+  .d3-wrap { gap: 14px; }
+  .d3-choose { grid-template-columns: minmax(0, 1fr); }
+  .d3-opt { min-height: 0; gap: 6px; }
+  .d3-opt small { font-size: 0.88rem; }
+}
+@media (max-width: 480px) {
+  .stage.d3-stage { height: 440px; }
+  .d3-panel .d3-instr { margin-block: 14px 12px; min-height: 5rem; }
+  .d3-panel .d3-instr h3 { font-size: 1.3rem; }
+  .d3-panel .game-actions .btn { flex: 1 1 calc(50% - 5px); padding-inline: 10px; font-size: 0.95rem; min-height: 48px; }
+  .d3-panel .game-actions .btn.primary { flex-basis: 100%; }
+}

@@ -179,6 +179,7 @@
     $("err1").textContent = ""; $("err3").textContent = "";
     $("err0").textContent = "Sesi dimulai ulang oleh admin. Masukkan namamu lagi.";
     if (pilah) pilah.restart();
+    if (window.praktikReset) window.praktikReset();
     show("s0");
   }
 
@@ -264,6 +265,62 @@
       hasPost = true; showResult(res.result); window.scrollTo(0, 0); route();
     });
   });
+
+    /* pilihan praktik daur ulang: peserta memilih praktik mana yang dikerjakan lebih dulu, urutan bebas */
+  var PRAKTIK = {
+    botol: { panel: "d3-panel", reset: "d3-reset", nama: "pot dari botol bekas" },
+    kaleng: { panel: "k3-panel", reset: "k3-reset", nama: "tempat pensil dari kaleng bekas" },
+    kompos: { panel: "c3-panel", reset: "c3-reset", nama: "kompos dari sisa makanan" },
+    ecobrick: { panel: "e3-panel", reset: "e3-reset", nama: "ecobrick dari bungkus plastik" }
+  };
+  var praktikNow = null, praktikDone = {};
+  var pickBtns = document.querySelectorAll(".d3-opt");
+  function praktikMsg() {
+    var m = $("d3-pickmsg"), keys = Object.keys(PRAKTIK);
+    var all = keys.every(function (k) { return praktikDone[k]; });
+    if (all) { m.textContent = "Semua praktik sudah selesai. Lanjut baca materi di bawah, lalu tunggu instruksi admin."; return; }
+    if (!praktikNow) { m.textContent = "Pilih salah satu praktik di atas untuk memulai."; return; }
+    if (praktikDone[praktikNow]) {
+      var other = keys.filter(function (k) { return k !== praktikNow && !praktikDone[k]; })[0];
+      m.textContent = "Praktik ini selesai. Mau coba " + PRAKTIK[other].nama + " juga?";
+      return;
+    }
+    m.textContent = "Kamu bisa berpindah praktik kapan saja. Kemajuan di tiap praktik tetap ada selama halaman ini terbuka.";
+  }
+  function choosePraktik(p, scroll) {
+    praktikNow = p;
+    Object.keys(PRAKTIK).forEach(function (k) { $(PRAKTIK[k].panel).hidden = k !== p; });
+    Array.prototype.forEach.call(pickBtns, function (b) {
+      var on = b.getAttribute("data-p") === p;
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    praktikMsg();
+    if (scroll && p) {
+      var el = $(PRAKTIK[p].panel), calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      try { el.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "start" }); } catch (e) { el.scrollIntoView(); }
+    }
+  }
+  Array.prototype.forEach.call(pickBtns, function (b) {
+    b.addEventListener("click", function () { choosePraktik(b.getAttribute("data-p"), true); });
+  });
+  function markPraktik(p) {
+    praktikDone[p] = true;
+    Array.prototype.forEach.call(pickBtns, function (b) {
+      if (b.getAttribute("data-p") === p) b.querySelector(".tag").hidden = false;
+    });
+    praktikMsg();
+  }
+  window.addEventListener("daur3d:finish", function () { markPraktik("botol"); });
+  window.addEventListener("daur3d2:finish", function () { markPraktik("kaleng"); });
+  window.addEventListener("daur3d3:finish", function () { markPraktik("kompos"); });
+  window.addEventListener("daur3d4:finish", function () { markPraktik("ecobrick"); });
+  window.praktikReset = function () { // sesi dimulai ulang: kembalikan semua praktik dan pilihan ke awal
+    praktikDone = {};
+    Array.prototype.forEach.call(pickBtns, function (b) { b.querySelector(".tag").hidden = true; });
+    Object.keys(PRAKTIK).forEach(function (k) { var b = $(PRAKTIK[k].reset); if (b) b.click(); });
+    choosePraktik(null, false);
+  };
 
   route();
 })();

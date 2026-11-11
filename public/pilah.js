@@ -76,22 +76,35 @@ window.initPilah = function () {
       var ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide });
       var ring = new THREE.Mesh(new THREE.RingGeometry(1.15, 1.45, 48), ringMat);
       ring.rotation.x = -Math.PI / 2; ring.position.y = 0.03;
-      var cv = document.createElement("canvas"); cv.width = 512; cv.height = 160;
+      /* label: potongan selimut tabung yang menempel di badan tong (bukan sprite datar),
+         jadi tidak pernah tertembus badan tong dan ikut melengkung mengikuti bentuknya */
+      var cv = document.createElement("canvas"); cv.width = 512; cv.height = 176;
       var tex = new THREE.CanvasTexture(cv);
-      var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
-      sp.scale.set(2.2, 0.69, 1); sp.position.set(0, 0.95, 1.0);
-      g.add(body, rim, hole, ring, sp);
+      if (renderer.capabilities && renderer.capabilities.getMaxAnisotropy) tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+      var LBL_Y = 0.95, LBL_H = 0.58, LBL_ARC = 1.9; // tinggi, dan lebar busur (radian)
+      var rAt = function (y) { return 0.8 + 0.15 * (y / 1.8) + 0.02; }; // jari-jari badan di ketinggian y + sedikit jarak
+      var lbl = new THREE.Mesh(
+        new THREE.CylinderGeometry(rAt(LBL_Y + LBL_H / 2), rAt(LBL_Y - LBL_H / 2), LBL_H, 40, 1, true, -LBL_ARC / 2, LBL_ARC),
+        new THREE.MeshBasicMaterial({ map: tex, transparent: true, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })
+      );
+      lbl.position.y = LBL_Y;
+      g.add(body, rim, hole, ring, lbl);
       scene.add(g);
       bins[c] = { g: g, body: bodyMat, rim: rimMat, ring: ringMat, cv: cv, tex: tex, h: 0, want: 0, bump: 0, flashUntil: 0 };
     });
     function drawLabel(c) {
-      var b = bins[c], ctx = b.cv.getContext("2d");
-      ctx.clearRect(0, 0, 512, 160);
-      ctx.fillStyle = cssVar("--c-" + c); roundRect(ctx, 6, 14, 500, 132, 16); ctx.fill();
+      var b = bins[c], ctx = b.cv.getContext("2d"), W = b.cv.width, H = b.cv.height;
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = cssVar("--c-" + c); roundRect(ctx, 4, 8, W - 8, H - 16, 22); ctx.fill();
+      ctx.lineWidth = 6; ctx.strokeStyle = cssVar("--edge") || "#111"; ctx.stroke();
       ctx.fillStyle = cssVar("--on-" + c);
-      ctx.font = '800 64px Archivo, "Arial Narrow", Arial, sans-serif';
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText(CATS[c].toUpperCase(), 256, 82);
+      var txt = CATS[c].toUpperCase(), size = 76, maxW = W - 120; // sisakan ruang kiri/kanan: tepi label tampak menyempit saat melengkung
+      do {
+        ctx.font = '800 ' + size + 'px "Bricolage Grotesque", "Trebuchet MS", Arial, sans-serif';
+        size -= 2;
+      } while (ctx.measureText(txt).width > maxW && size > 20);
+      ctx.fillText(txt, W / 2, H / 2 + 3);
       b.tex.needsUpdate = true;
     }
     function applyTheme() {
@@ -231,17 +244,18 @@ window.initPilah = function () {
     function layout() {
       var w = wrap.clientWidth || 600, h = wrap.clientHeight || 400;
       renderer.setSize(w, h, false);
-      var asp = w / h, halfW, sx, sz, elev;
+      var asp = w / h, halfW, halfH = 0, sx, sz, elev;
       camera.aspect = asp;
       if (asp >= 1.3) {
         binSpots = { org: [-4.5, -1.6], an: [-1.5, -1.6], res: [1.5, -1.6], b3: [4.5, -1.6] };
         sx = 0; sz = 3.2; look.set(0, 0.6, 0.5); halfW = 6.7; elev = [0.6, 0.8];
       } else {
         binSpots = { org: [-2.2, -3.2], an: [2.2, -3.2], res: [-2.2, 0.9], b3: [2.2, 0.9] };
-        sx = 0; sz = 4.7; look.set(0, 0.4, 0.8); halfW = 3.9; elev = [0.85, 0.55];
+        sx = 0; sz = 4.4; look.set(0, 0.5, 0.6); halfW = 4.1; halfH = 5.6; elev = [0.85, 0.55]; // halfH: supaya tong baris atas dan benda tidak terpotong di layar sempit
       }
       Object.keys(bins).forEach(function (c) { bins[c].g.position.set(binSpots[c][0], 0, binSpots[c][1]); });
-      var d = Math.max(10, halfW / (Math.tan(camera.fov * Math.PI / 360) * asp));
+      var tf = Math.tan(camera.fov * Math.PI / 360);
+      var d = Math.max(10, halfW / (tf * asp), halfH / tf);
       camera.position.set(look.x, look.y + d * elev[0], look.z + d * elev[1]);
       camera.lookAt(look); camera.updateProjectionMatrix();
       homePos.set(sx, 0, sz); pad.position.set(sx, 0.02, sz);

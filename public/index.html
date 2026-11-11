@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="pilah.css">
 <link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="daur3d.css">
 <script src="theme.js" defer></script>
 </head>
 <body>
@@ -73,13 +74,13 @@
             <div class="item-card"><div class="name" id="g-name"></div><p class="hint" id="g-hint"></p></div>
           </div>
 
+          <div class="feedback" id="g-fb" aria-live="polite">Seret benda ke tong yang tepat, atau pilih lewat tombol di bawah.</div>
+
           <div class="stage" id="stage">
             <canvas id="scene" role="img" aria-label="Adegan 3D: seret benda sampah ke tong yang sesuai. Gunakan tombol tong di bawah sebagai alternatif."></canvas>
             <p class="drag-tip" id="tip">Tahan benda lalu seret ke tong</p>
           </div>
           <p class="nogl" id="nogl" hidden>Perangkat atau browser ini tidak mendukung tampilan 3D. Pilih tong yang tepat dengan tombol di bawah.</p>
-
-          <div class="feedback" id="g-fb" aria-live="polite">Seret benda ke tong yang tepat, atau pilih lewat tombol di bawah.</div>
 
           <p class="eyebrow alt-label">Atau pilih tong dengan tombol</p>
           <div class="bins" id="g-bins">
@@ -153,25 +154,128 @@
       <section id="daur">
         <div class="sec-head">
           <p class="eyebrow">Praktik daur ulang</p>
-          <h2>Olah sendiri jadi barang berguna</h2>
-          <p>Pilih satu dari empat proyek sederhana, siapkan bahannya, lalu kerjakan langkahnya secara virtual. Semuanya memakai sampah yang juga bisa disetor, jadi kamu bisa memilih menjual atau memakainya sendiri.</p>
+          <h2>Pilih praktik daur ulang</h2>
+          <p>Ada empat praktik. Pilih salah satu untuk dikerjakan lebih dulu, lalu coba yang lain kalau mau. Urutannya bebas dan kamu bisa berpindah kapan saja.</p>
         </div>
-        <div class="panel sim" id="sim">
-          <div class="sim-tabs" id="sim-tabs" role="group" aria-label="Pilih proyek daur ulang"></div>
-          <div class="sim-body">
-            <div class="sim-stage">
-              <svg id="sim-svg" viewBox="0 0 400 260" role="img" aria-label="Simulasi daur ulang"></svg>
-              <p class="sim-cap" id="sim-cap"></p>
+
+        <div class="d3-wrap">
+          <div class="d3-choose" id="d3-choose" role="group" aria-label="Pilih praktik daur ulang">
+            <button type="button" class="d3-opt" data-p="botol" aria-pressed="false">
+              <span class="top"><span class="k">Praktik 1</span><span class="tag" hidden>Selesai</span></span>
+              <b>Pot dari botol bekas</b>
+              <small>Membersihkan, memotong, mengecat, lalu menanam bibit.</small>
+            </button>
+            <button type="button" class="d3-opt" data-p="kaleng" aria-pressed="false">
+              <span class="top"><span class="k">Praktik 2</span><span class="tag" hidden>Selesai</span></span>
+              <b>Tempat pensil dari kaleng bekas</b>
+              <small>Membersihkan, melapisi tepi, membungkus kertas, lalu mengisi pensil.</small>
+            </button>
+            <button type="button" class="d3-opt" data-p="kompos" aria-pressed="false">
+              <span class="top"><span class="k">Praktik 3</span><span class="tag" hidden>Selesai</span></span>
+              <b>Kompos dari sisa makanan</b>
+              <small>Melubangi ember, menumpuk daun, sisa sayur, dan tanah, lalu mengaduk.</small>
+            </button>
+            <button type="button" class="d3-opt" data-p="ecobrick" aria-pressed="false">
+              <span class="top"><span class="k">Praktik 4</span><span class="tag" hidden>Selesai</span></span>
+              <b>Ecobrick dari bungkus plastik</b>
+              <small>Menggunting bungkus snack, mengisi botol selapis demi selapis, lalu memadatkan.</small>
+            </button>
+          </div>
+          <p class="note d3-pickmsg" id="d3-pickmsg" aria-live="polite">Pilih salah satu praktik di atas untuk memulai.</p>
+
+          <div class="panel d3-panel" id="d3-panel" hidden>
+            <p class="nogl" id="d3-nogl" hidden>Browser ini tidak mendukung tampilan 3D.</p>
+            <div id="d3-body">
+              <div class="game-top"><span id="d3-phase">Persiapan</span><span id="d3-mist" hidden></span></div>
+              <div class="progress" aria-hidden="true"><i id="d3-bar"></i></div>
+              <div class="d3-instr">
+                <h3 id="d3-title">Siapkan bahan dan alat</h3>
+                <p id="d3-text"></p>
+                <p class="warn" id="d3-warn" hidden></p>
+              </div>
+              <div class="feedback" id="d3-fb" aria-live="polite" hidden></div>
+              <div class="stage d3-stage" id="d3-stage">
+                <canvas id="d3-canvas" role="img" aria-label="Adegan 3D pembuatan pot dari botol. Tombol Petunjuk dan Selesaikan otomatis tersedia sebagai alternatif."></canvas>
+                <p class="drag-tip" id="d3-tip"></p>
+              </div>
+              <div class="game-actions">
+                <button type="button" class="btn" id="d3-hint">Petunjuk</button>
+                <button type="button" class="btn ghost" id="d3-skip">Selesaikan otomatis</button>
+                <button type="button" class="btn primary" id="d3-next" hidden>Lanjut</button>
+                <button type="button" class="btn ghost" id="d3-reset">Ulangi</button>
+              </div>
             </div>
-            <div class="sim-ctrl">
-              <div class="progress" aria-hidden="true"><i id="sim-bar"></i></div>
-              <p class="eyebrow" id="sim-phase"></p>
-              <h3 id="sim-title"></h3>
-              <p id="sim-text"></p>
-              <p class="warn" id="sim-warn" hidden></p>
-              <div class="sim-opts" id="sim-opts"></div>
-              <div class="feedback" id="sim-fb" aria-live="polite" hidden></div>
-              <div class="game-actions" id="sim-actions"></div>
+          </div>
+
+          <div class="panel d3-panel" id="k3-panel" hidden>
+            <p class="nogl" id="k3-nogl" hidden>Browser ini tidak mendukung tampilan 3D.</p>
+            <div id="k3-body">
+              <div class="game-top"><span id="k3-phase">Persiapan</span><span id="k3-mist" hidden></span></div>
+              <div class="progress" aria-hidden="true"><i id="k3-bar"></i></div>
+              <div class="d3-instr">
+                <h3 id="k3-title">Siapkan bahan dan alat</h3>
+                <p id="k3-text"></p>
+                <p class="warn" id="k3-warn" hidden></p>
+              </div>
+              <div class="feedback" id="k3-fb" aria-live="polite" hidden></div>
+              <div class="stage d3-stage" id="k3-stage">
+                <canvas id="k3-canvas" role="img" aria-label="Adegan 3D pembuatan tempat pensil dari kaleng. Tombol Petunjuk dan Selesaikan otomatis tersedia sebagai alternatif."></canvas>
+                <p class="drag-tip" id="k3-tip"></p>
+              </div>
+              <div class="game-actions">
+                <button type="button" class="btn" id="k3-hint">Petunjuk</button>
+                <button type="button" class="btn ghost" id="k3-skip">Selesaikan otomatis</button>
+                <button type="button" class="btn primary" id="k3-next" hidden>Lanjut</button>
+                <button type="button" class="btn ghost" id="k3-reset">Ulangi</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel d3-panel" id="c3-panel" hidden>
+            <p class="nogl" id="c3-nogl" hidden>Browser ini tidak mendukung tampilan 3D.</p>
+            <div id="c3-body">
+              <div class="game-top"><span id="c3-phase">Persiapan</span><span id="c3-mist" hidden></span></div>
+              <div class="progress" aria-hidden="true"><i id="c3-bar"></i></div>
+              <div class="d3-instr">
+                <h3 id="c3-title">Siapkan bahan dan alat</h3>
+                <p id="c3-text"></p>
+                <p class="warn" id="c3-warn" hidden></p>
+              </div>
+              <div class="feedback" id="c3-fb" aria-live="polite" hidden></div>
+              <div class="stage d3-stage" id="c3-stage">
+                <canvas id="c3-canvas" role="img" aria-label="Adegan 3D pembuatan kompos di ember. Tombol Petunjuk dan Selesaikan otomatis tersedia sebagai alternatif."></canvas>
+                <p class="drag-tip" id="c3-tip"></p>
+              </div>
+              <div class="game-actions">
+                <button type="button" class="btn" id="c3-hint">Petunjuk</button>
+                <button type="button" class="btn ghost" id="c3-skip">Selesaikan otomatis</button>
+                <button type="button" class="btn primary" id="c3-next" hidden>Lanjut</button>
+                <button type="button" class="btn ghost" id="c3-reset">Ulangi</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel d3-panel" id="e3-panel" hidden>
+            <p class="nogl" id="e3-nogl" hidden>Browser ini tidak mendukung tampilan 3D.</p>
+            <div id="e3-body">
+              <div class="game-top"><span id="e3-phase">Persiapan</span><span id="e3-mist" hidden></span></div>
+              <div class="progress" aria-hidden="true"><i id="e3-bar"></i></div>
+              <div class="d3-instr">
+                <h3 id="e3-title">Siapkan bahan dan alat</h3>
+                <p id="e3-text"></p>
+                <p class="warn" id="e3-warn" hidden></p>
+              </div>
+              <div class="feedback" id="e3-fb" aria-live="polite" hidden></div>
+              <div class="stage d3-stage" id="e3-stage">
+                <canvas id="e3-canvas" role="img" aria-label="Adegan 3D pembuatan ecobrick dari bungkus plastik. Tombol Petunjuk dan Selesaikan otomatis tersedia sebagai alternatif."></canvas>
+                <p class="drag-tip" id="e3-tip"></p>
+              </div>
+              <div class="game-actions">
+                <button type="button" class="btn" id="e3-hint">Petunjuk</button>
+                <button type="button" class="btn ghost" id="e3-skip">Selesaikan otomatis</button>
+                <button type="button" class="btn primary" id="e3-next" hidden>Lanjut</button>
+                <button type="button" class="btn ghost" id="e3-reset">Ulangi</button>
+              </div>
             </div>
           </div>
         </div>
@@ -248,7 +352,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="pilah.js"></script>
 <script src="script.js"></script>
-<script src="daur.js"></script>
+<script src="daur3d.js"></script>
+<script src="daur3d2.js"></script>
+<script src="daur3d3.js"></script>
+<script src="daur3d4.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
