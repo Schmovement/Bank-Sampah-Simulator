@@ -103,13 +103,14 @@ function pushStats() {
   statsTimer = setTimeout(async () => {
     statsTimer = null;
     try {
-      const [total, preDone, postDone] = await Promise.all([
+      const [total, preDone, postDone, gameDone] = await Promise.all([
         users.countDocuments({}),
         users.countDocuments({ pre: { $exists: true } }),
-        users.countDocuments({ post: { $exists: true } })
+        users.countDocuments({ post: { $exists: true } }),
+        users.countDocuments({ "game.first": { $exists: true } })
       ]);
       const room = io.sockets.adapter.rooms.get("users");
-      io.to("admins").emit("stats", { phase, online: room ? room.size : 0, total, preDone, postDone });
+      io.to("admins").emit("stats", { phase, online: room ? room.size : 0, total, preDone, postDone, gameDone });
     } catch (e) { console.error("stats:", e.message); }
   }, 300);
 }
@@ -193,16 +194,15 @@ io.on("connection", (socket) => {
       if (socket.data.sid !== sessionId) return ack({ ok: false, reset: true });
       const skor = data && data.skor, total = data && data.total;
       const ms = data && data.ms;
-      const msOk = Number.isInteger(ms) && ms >= 1 && ms <= MAX_MS ? ms : null; // waktu tidak valid: dianggap paling lambat
+      const msOk = Number.isInteger(ms) && ms >= 1 && ms <= MAX_MS ? ms : null;
       if (!Number.isInteger(skor) || !Number.isInteger(total) || total < 1 || total > 50 || skor < 0 || skor > total) {
         return ack({ ok: false, error: "Skor tidak valid." });
       }
       const mine = { _id: uid, pre: { $exists: true }, post: { $exists: false } };
-      // skor + waktu permainan pertama: ditulis sekali saja, tidak pernah diubah oleh permainan berikutnya
       await users.updateOne({ ...mine, "game.first": { $exists: false } }, { $set: { "game.first": skor, "game.firstMs": msOk } });
-      // skor terbaik pribadi (hanya naik) dan jumlah permainan
       await users.updateOne(mine, { $max: { "game.best": skor }, $set: { "game.total": total, "game.lastAt": new Date() }, $inc: { "game.plays": 1 } });
       ack({ ok: true });
+      pushStats();   // <-- baris baru ini
     } catch (e) { console.error("game:", e.message); ack({ ok: false, error: "Gagal menyimpan." }); }
   });
 

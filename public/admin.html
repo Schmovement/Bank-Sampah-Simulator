@@ -45,6 +45,7 @@
           <div class="stat"><b id="total">0</b>Terdaftar</div>
           <div class="stat"><b id="pre">0</b>Selesai pre</div>
           <div class="stat"><b id="post">0</b>Selesai post</div>
+          <div class="stat"><b id="game">0</b>Selesai game (percobaan pertama)</div>
         </div>
 
         <button class="btn danger" id="b-post" type="button">PAKSA SEMUA USER KE POST-TASK</button>
@@ -85,6 +86,7 @@
         $("phase").textContent = s.phase === "post" ? "POST-TASK" : "SIMULATOR";
         $("online").textContent = s.online; $("total").textContent = s.total;
         $("pre").textContent = s.preDone; $("post").textContent = s.postDone;
+        $("game").textContent = s.gameDone || 0;
       });
 
       function setPhase(p) {
