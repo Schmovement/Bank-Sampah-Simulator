@@ -29,32 +29,36 @@
   --font-body: "Atkinson Hyperlegible", "Segoe UI", Roboto, Arial, sans-serif;
   --font-mono: var(--font-body);
 }
-/* mode gelap: latar ungu-malam yang tenang, warna tong sedikit diredam supaya tidak silau,
+/* mode gelap: latar abu-biru lembut (kontras diturunkan), warna tong sedikit diredam supaya tidak silau,
    garis tepi lebih lembut daripada teks sehingga elemen tidak saling bertabrakan */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #111317; --surface: #1A1D24; --fg: #ECEEF2; --muted: #9AA2B2; --line: #2B313C; --soft: #232832;
-    --accent: #8AB4F8; --on-accent: #0A1A33;
-    --edge: #3B4352; --drop: #07080B; --dot: rgba(236, 238, 242, .03); --glow: 10%; --sum-bg: #1F2A40;
-    --c-org: #5DB98C; --on-org: #05210F;
-    --c-an: #D9B65E;  --on-an: #261B00;
-    --c-res: #93A8C6; --on-res: #0B1626;
-    --c-b3: #D98E80;  --on-b3: #2B0C06;
-    --good: #72D6A4; --bad: #FF9E94;
+    --bg: #1F222A; --surface: #282C35; --fg: #D3D8E0; --muted: #98A0AE; --line: #363B47; --soft: #2D323C;
+    --accent: #9DB4E3; --on-accent: #1A2540;
+    --edge: #454C5B; --drop: #15171C; --dot: rgba(211, 216, 224, .025); --glow: 8%; --sum-bg: #2B364C;
+    --c-org: #74B598; --on-org: #10261B;
+    --c-an: #CDB57F;  --on-an: #2C2310;
+    --c-res: #9FB0C9; --on-res: #141C2B;
+    --c-b3: #CD9A8F;  --on-b3: #2E1712;
+    --good: #8CCBA9; --bad: #E6A8A0;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #111317; --surface: #1A1D24; --fg: #ECEEF2; --muted: #9AA2B2; --line: #2B313C; --soft: #232832;
-    --accent: #8AB4F8; --on-accent: #0A1A33;
-    --edge: #3B4352; --drop: #07080B; --dot: rgba(236, 238, 242, .03); --glow: 10%; --sum-bg: #1F2A40;
-    --c-org: #5DB98C; --on-org: #05210F;
-    --c-an: #D9B65E;  --on-an: #261B00;
-    --c-res: #93A8C6; --on-res: #0B1626;
-    --c-b3: #D98E80;  --on-b3: #2B0C06;
-    --good: #72D6A4; --bad: #FF9E94;
+  --bg: #1F222A; --surface: #282C35; --fg: #D3D8E0; --muted: #98A0AE; --line: #363B47; --soft: #2D323C;
+    --accent: #9DB4E3; --on-accent: #1A2540;
+    --edge: #454C5B; --drop: #15171C; --dot: rgba(211, 216, 224, .025); --glow: 8%; --sum-bg: #2B364C;
+    --c-org: #74B598; --on-org: #10261B;
+    --c-an: #CDB57F;  --on-an: #2C2310;
+    --c-res: #9FB0C9; --on-res: #141C2B;
+    --c-b3: #CD9A8F;  --on-b3: #2E1712;
+    --good: #8CCBA9; --bad: #E6A8A0;
   color-scheme: dark;
 }
+
+/* mode gelap: putih murni pada kartu ringkasan dilembutkan */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .sum { color: #DDE2EA; } }
+:root[data-theme="dark"] .sum { color: #DDE2EA; }
 
 /* warna layar: diatur oleh ui.js lewat body[data-screen] */
 body { --screen: var(--accent); --screen-ink: var(--on-accent); }

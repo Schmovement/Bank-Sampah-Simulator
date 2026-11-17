@@ -111,3 +111,19 @@ main.admin h2 { margin-bottom: 4px; }
   .btn.danger { min-height: 80px; font-size: 1.05rem; }
   .row-btns .btn { flex: 1 1 100%; }
 }
+
+/* mode gelap: medali papan skor dan ilustrasi tong dibuat lebih lembut */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .top-list li { --mc: #CDB57F; }
+  :root:not([data-theme="light"]) .top-list li:nth-child(2) { --mc: #A9B1C4; }
+  :root:not([data-theme="light"]) .top-list li:nth-child(3) { --mc: #C79A78; }
+  :root:not([data-theme="light"]) .top-list .rk { color: #241C08; }
+  :root:not([data-theme="light"]) .hero-bins .bottle { fill: #8DB8CB; }
+  :root:not([data-theme="light"]) .hero-bins .cap { fill: #5C84BE; }
+}
+:root[data-theme="dark"] .top-list li { --mc: #CDB57F; }
+:root[data-theme="dark"] .top-list li:nth-child(2) { --mc: #A9B1C4; }
+:root[data-theme="dark"] .top-list li:nth-child(3) { --mc: #C79A78; }
+:root[data-theme="dark"] .top-list .rk { color: #241C08; }
+:root[data-theme="dark"] .hero-bins .bottle { fill: #8DB8CB; }
+:root[data-theme="dark"] .hero-bins .cap { fill: #5C84BE; }

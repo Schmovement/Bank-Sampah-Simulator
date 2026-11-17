@@ -175,7 +175,7 @@
     $("f-gate").reset();
     pre.clear(); post.clear();
     $("post-done").hidden = true; $("post-actions").hidden = false;
-    $("post-intro").textContent = "Jawab 4 pertanyaan yang sama seperti di awal. Pilih satu jawaban untuk tiap pertanyaan. Jawaban tidak bisa diubah setelah dikirim.";
+    $("post-intro").textContent = "Jawab 10 pertanyaan yang sama seperti di awal. Pilih satu jawaban untuk tiap pertanyaan. Jawaban tidak bisa diubah setelah dikirim.";
     $("err1").textContent = ""; $("err3").textContent = "";
     $("err0").textContent = "Sesi dimulai ulang oleh admin. Masukkan namamu lagi.";
     if (pilah) pilah.restart();
