@@ -303,3 +303,41 @@ footer strong { color: var(--fg); }
   footer { margin-block: 24px 28px; padding: 26px 16px 20px; border-radius: 20px; font-size: 0.88rem; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* ---------- ponsel: Langkah (jalur bernomor) dan Fase (anak tangga) ---------- */
+@media (max-width: 640px) {
+  /* Langkah 1-5: lingkaran bernomor yang disambung garis putus-putus, teks bebas tanpa kotak */
+  .flow { counter-reset: st; gap: 0; padding: 4px 0 0; }
+  .flow li, .flow li:nth-child(even) { counter-increment: st; position: relative; display: block; overflow: visible; background: none; border: 0; border-radius: 0; padding: 0 0 26px 62px; transform: none; }
+  .flow li:last-child { padding-bottom: 0; }
+  .flow li::before { content: counter(st); position: absolute; left: 0; top: 0; bottom: auto; width: 46px; height: 46px; background: var(--fc); color: var(--fo); border: var(--bw) solid var(--edge); border-radius: 50%; display: grid; place-items: center; font: 800 1.25rem var(--font-display); box-shadow: 0 3px 0 var(--drop); }
+  .flow li:not(:last-child)::after { content: ""; position: absolute; left: 21px; top: 54px; bottom: 8px; border-left: 3px dotted var(--edge); opacity: .6; }
+  .flow .k { display: block; width: auto; margin: 2px 0 0; padding: 0; background: none; border: 0; border-radius: 0; color: var(--muted); font: 700 0.8rem var(--font-body); letter-spacing: .04em; text-transform: uppercase; }
+  .flow h3 { font-size: 1.35rem; margin: 0 0 4px; }
+  .flow p { font-size: 0.97rem; }
+
+  /* Fase 1-4: kartu berwarna bergeser ke kanan seperti anak tangga, nomor di lingkaran */
+  .values { counter-reset: fs; gap: 12px; align-items: stretch; }
+  .values > div:nth-child(n) { counter-increment: fs; min-height: 0; display: grid; grid-template-columns: 48px minmax(0, 1fr); column-gap: 14px; row-gap: 2px; align-items: start; padding: 16px 16px 16px 14px; border-radius: 20px; }
+  .values > div:nth-child(2) { margin-left: 12px; }
+  .values > div:nth-child(3) { margin-left: 24px; }
+  .values > div:nth-child(4) { margin-left: 36px; }
+  .values > div::before { content: counter(fs); grid-column: 1; grid-row: 1 / span 3; width: 48px; height: 48px; display: grid; place-items: center; background: var(--surface); color: var(--fg); border: var(--bw) solid var(--edge); border-radius: 50%; font: 800 1.4rem var(--font-display); }
+  .values > div > * { grid-column: 2; }
+  .values .eyebrow::before { display: none; }
+  .values .eyebrow { font-size: 0.8rem; letter-spacing: .04em; text-transform: uppercase; opacity: .85; }
+  .values h3 { font-size: 1.3rem; }
+  .values p { font-size: 0.95rem; }
+}
+
+/* ---------- ponsel: kartu "mengapa penting" jadi satu panel berbaris ---------- */
+@media (max-width: 640px) {
+  .why { gap: 0; margin-top: 24px; background: var(--surface); border: var(--bw) solid var(--edge); border-radius: 22px; overflow: hidden; box-shadow: 0 4px 0 var(--drop); }
+  .why > div:nth-child(n) { --wo: var(--on-org); background: none; border: 0; border-radius: 0; padding: 16px 18px 18px; gap: 8px; }
+  .why > div:nth-child(2) { --wo: var(--on-an); }
+  .why > div:nth-child(3) { --wo: var(--on-res); }
+  .why > div:nth-child(n+2) { border-top: 2px dashed var(--line); }
+  .why > div::before { display: none; }
+  .why h3 { width: fit-content; padding: 3px 14px; background: var(--wc); color: var(--wo); border: var(--bw) solid var(--edge); border-radius: 99px; font-size: 1.05rem; }
+  .why p { font-size: 0.97rem; line-height: 1.5; }
+}
