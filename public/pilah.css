@@ -1,55 +1,247 @@
 /* Latihan memilah 3D. Token warna dan komponen dasar dari style.css.
    Tong dibuat seperti tong sungguhan: badan berwarna, tutup yang terangkat saat disentuh, gagang di atasnya. */
-html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
-body { min-height: 100vh; }
-a.brand { color: var(--fg); text-decoration: none; }
+html {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+body {
+  min-height: 100vh;
+}
+a.brand {
+  color: var(--fg);
+  text-decoration: none;
+}
 
-section.play { padding-block: 32px 48px; }
-h1.pg { font-size: clamp(1.9rem, 6.4vw, 3.8rem); }
+section.play {
+  padding-block: 32px 48px;
+}
+h1.pg {
+  font-size: clamp(1.9rem, 6.4vw, 3.8rem);
+}
 
-.stage { position: relative; height: clamp(380px, 62vh, 560px); background: linear-gradient(180deg, var(--soft), var(--bg)); border: var(--bw) solid var(--edge); border-radius: 24px; overflow: hidden; }
-.stage canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
-.drag-tip { position: absolute; left: 12px; bottom: 12px; margin: 0; padding: 7px 14px; max-width: calc(100% - 24px); background: var(--c-an); color: var(--on-an); border: var(--bw) solid var(--edge); border-radius: 16px 16px 16px 3px; font: 700 0.85rem var(--font-body); pointer-events: none; transition: opacity .4s, transform .4s; }
-.drag-tip.gone { opacity: 0; transform: translateY(6px); }
-.nogl { padding: 14px; background: var(--soft); border: var(--bw) dashed var(--edge); border-radius: 16px; margin: 0; }
+.stage {
+  position: relative;
+  height: clamp(380px, 62vh, 560px);
+  background: linear-gradient(180deg, var(--soft), var(--bg));
+  border: var(--bw) solid var(--edge);
+  border-radius: 24px;
+  overflow: hidden;
+}
+.stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.drag-tip {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  margin: 0;
+  padding: 7px 14px;
+  max-width: calc(100% - 24px);
+  background: var(--c-an);
+  color: var(--on-an);
+  border: var(--bw) solid var(--edge);
+  border-radius: 16px 16px 16px 3px;
+  font: 700 0.85rem var(--font-body);
+  pointer-events: none;
+  transition:
+    opacity 0.4s,
+    transform 0.4s;
+}
+.drag-tip.gone {
+  opacity: 0;
+  transform: translateY(6px);
+}
+.nogl {
+  padding: 14px;
+  background: var(--soft);
+  border: var(--bw) dashed var(--edge);
+  border-radius: 16px;
+  margin: 0;
+}
 
-.item-card { min-height: 4.6rem; margin-block: 20px 0; }
-.item-card .name { font: 800 clamp(1.7rem, 6vw, 3.1rem)/1.05 var(--font-display); letter-spacing: -0.02em; overflow-wrap: anywhere; }
-.item-card .hint { color: var(--muted); margin-top: 6px; }
-.alt-label { margin: 20px 0 8px; }
-#sort-g-play { display: flex; justify-content: space-between; }
-#g-score { background: var(--c-org); color: var(--on-org); }
+.item-card {
+  min-height: 4.6rem;
+  margin-block: 20px 0;
+}
+.item-card .name {
+  font: 800 clamp(1.7rem, 6vw, 3.1rem)/1.05 var(--font-display);
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+.item-card .hint {
+  color: var(--muted);
+  margin-top: 6px;
+}
+.alt-label {
+  margin: 20px 0 8px;
+}
+#sort-g-play {
+  display: flex;
+  justify-content: space-between;
+}
+#g-score {
+  background: var(--c-org);
+  color: var(--on-org);
+}
 
 /* tong: baris dan kolom diberi jarak lebih longgar supaya tutup serta gagang tidak menempel ke tong lain */
-.bins { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px 18px; margin-top: 4px; padding: 30px 8px 6px; }
-.bin { position: relative; border: var(--bw) solid var(--edge); border-radius: 6px 6px 18px 18px; padding: 20px 12px 12px; min-height: 104px; font: 800 1.2rem var(--font-display); letter-spacing: -0.01em; cursor: pointer; text-align: left; display: grid; gap: 2px; align-content: end; box-shadow: 0 4px 0 var(--drop); transition: transform .12s, box-shadow .12s; }
-.bin small { font: 400 0.82rem var(--font-body); letter-spacing: 0; }
-.bin::before { /* tutup */ content: ""; position: absolute; left: -7px; right: -7px; top: -15px; height: 17px; background: inherit; border: var(--bw) solid var(--edge); border-radius: 10px 10px 4px 4px; box-shadow: inset 0 -5px 0 rgba(0, 0, 0, .14); transition: transform .15s; transform-origin: left bottom; }
-.bin::after { /* gagang */ content: ""; position: absolute; left: 50%; top: -27px; width: 36px; height: 11px; margin-left: -18px; background: var(--surface); border: var(--bw) solid var(--edge); border-bottom: 0; border-radius: 9px 9px 0 0; transition: transform .15s; }
-.bin[data-c="org"] { background: var(--c-org); color: var(--on-org); }
-.bin[data-c="an"] { background: var(--c-an); color: var(--on-an); }
-.bin[data-c="res"] { background: var(--c-res); color: var(--on-res); }
-.bin[data-c="b3"] { background: var(--c-b3); color: var(--on-b3); }
-.bin:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 0 var(--drop); }
-.bin:hover:not(:disabled)::before { transform: translateY(-5px) rotate(-5deg); }
-.bin:hover:not(:disabled)::after { transform: translateY(-9px); }
-.bin:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--drop); }
-.bin:disabled { cursor: default; opacity: .45; box-shadow: none; }
-.bin.picked-wrong { opacity: 1; outline: 4px solid var(--bad); outline-offset: 3px; }
-.bin.right { opacity: 1; outline: 4px solid var(--fg); outline-offset: 3px; }
+.bins {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px 18px;
+  margin-top: 4px;
+  padding: 30px 8px 6px;
+}
+.bin {
+  position: relative;
+  border: var(--bw) solid var(--edge);
+  border-radius: 6px 6px 18px 18px;
+  padding: 20px 12px 12px;
+  min-height: 104px;
+  font: 800 1.2rem var(--font-display);
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  text-align: left;
+  display: grid;
+  gap: 2px;
+  align-content: end;
+  box-shadow: 0 4px 0 var(--drop);
+  transition:
+    transform 0.12s,
+    box-shadow 0.12s;
+}
+.bin small {
+  font: 400 0.82rem var(--font-body);
+  letter-spacing: 0;
+}
+.bin::before {
+  /* tutup */
+  content: "";
+  position: absolute;
+  left: -7px;
+  right: -7px;
+  top: -15px;
+  height: 17px;
+  background: inherit;
+  border: var(--bw) solid var(--edge);
+  border-radius: 10px 10px 4px 4px;
+  box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.14);
+  transition: transform 0.15s;
+  transform-origin: left bottom;
+}
+.bin::after {
+  /* gagang */
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -27px;
+  width: 36px;
+  height: 11px;
+  margin-left: -18px;
+  background: var(--surface);
+  border: var(--bw) solid var(--edge);
+  border-bottom: 0;
+  border-radius: 9px 9px 0 0;
+  transition: transform 0.15s;
+}
+.bin[data-c="org"] {
+  background: var(--c-org);
+  color: var(--on-org);
+}
+.bin[data-c="an"] {
+  background: var(--c-an);
+  color: var(--on-an);
+}
+.bin[data-c="res"] {
+  background: var(--c-res);
+  color: var(--on-res);
+}
+.bin[data-c="b3"] {
+  background: var(--c-b3);
+  color: var(--on-b3);
+}
+.bin:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 var(--drop);
+}
+.bin:hover:not(:disabled)::before {
+  transform: translateY(-5px) rotate(-5deg);
+}
+.bin:hover:not(:disabled)::after {
+  transform: translateY(-9px);
+}
+.bin:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--drop);
+}
+.bin:disabled {
+  cursor: default;
+  opacity: 0.45;
+  box-shadow: none;
+}
+.bin.picked-wrong {
+  opacity: 1;
+  outline: 4px solid var(--bad);
+  outline-offset: 3px;
+}
+.bin.right {
+  opacity: 1;
+  outline: 4px solid var(--fg);
+  outline-offset: 3px;
+}
 
-.result .score { font: 800 clamp(3rem, 11vw, 5.4rem)/1 var(--font-display); letter-spacing: -0.03em; }
+.result .score {
+  font: 800 clamp(3rem, 11vw, 5.4rem)/1 var(--font-display);
+  letter-spacing: -0.03em;
+}
 
 /* 2 kolom: gagang menjulang 27px di atas tong, jadi jarak antar baris harus lebih besar dari itu */
-@media (max-width: 860px) { .bins { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 44px 22px; padding: 38px 10px 8px; } }
+@media (max-width: 860px) {
+  .bins {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 44px 22px;
+    padding: 38px 10px 8px;
+  }
+}
 @media (max-width: 480px) {
-  section.play { padding-block: 24px 36px; }
-  .stage { height: 460px; border-radius: 20px; }
-  .item-card { margin-block: 16px 0; min-height: 4.2rem; }
-  .alt-label { margin: 18px 0 6px; }
+  section.play {
+    padding-block: 24px 36px;
+  }
+  .stage {
+    height: 460px;
+    border-radius: 20px;
+  }
+  .item-card {
+    margin-block: 16px 0;
+    min-height: 4.2rem;
+  }
+  .alt-label {
+    margin: 18px 0 6px;
+  }
   /* tong 2x2 di ponsel: gagang butuh ruang di atas, jarak antar baris cukup besar */
-  .bins { gap: 44px 20px; padding: 38px 12px 8px; }
-  .bin { min-height: 88px; padding: 18px 10px 10px; font-size: 1.1rem; }
-  .bin small { font-size: 0.78rem; line-height: 1.25; }
-  .drag-tip { left: 10px; bottom: 10px; font-size: 0.8rem; padding: 6px 12px; }
+  .bins {
+    gap: 44px 20px;
+    padding: 38px 12px 8px;
+  }
+  .bin {
+    min-height: 88px;
+    padding: 18px 10px 10px;
+    font-size: 1.1rem;
+  }
+  .bin small {
+    font-size: 0.78rem;
+    line-height: 1.25;
+  }
+  .drag-tip {
+    left: 10px;
+    bottom: 10px;
+    font-size: 0.8rem;
+    padding: 6px 12px;
+  }
 }
