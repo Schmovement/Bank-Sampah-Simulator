@@ -28,7 +28,7 @@
         <div>
           <p class="eyebrow" style="margin-bottom:16px">To make a better world, starts with you</p>
           <h1>Sampah juga punya harga</h1>
-          <p class="lead">Masukkan nama lengkapmu untuk masuk ke sesi. Kamu akan mengerjakan pre-task, latihan memilah sampah 3D, membaca info daur ulang, lalu post-task.</p>
+          <p class="lead">Masukkan nama lengkapmu untuk masuk ke sesi. Kamu akan mengerjakan pre-task, menunggu sesi materi di waiting room, lalu lanjut ke latihan memilah sampah 3D, info daur ulang, dan post-task.</p>
         </div>
         <form class="panel" id="f-gate" autocomplete="off">
           <p class="eyebrow">Masuk sesi</p>
@@ -55,6 +55,36 @@
         </div>
         <p class="err" id="err1" role="alert"></p>
       </form>
+    </section>
+
+    <!-- Layar waiting room: setelah pre-task, menunggu admin membuka simulasi. Berisi materi PDF untuk dibaca -->
+    <section class="screen" id="swait" hidden>
+      <div class="sec-head">
+        <p class="eyebrow">Waiting room</p>
+        <h1 class="pg">Pre-task selesai</h1>
+        <p>Silakan tunggu sesi materi selesai untuk melanjutkan ke simulasi. Kamu akan otomatis dipindah saat admin membuka simulasi, jadi tidak perlu menyegarkan halaman. Sambil menunggu, baca materi di bawah.</p>
+      </div>
+
+      <div class="panel wait-status" role="status" aria-live="polite">
+        <span class="pulse" aria-hidden="true"></span>
+        <div><strong>Menunggu admin membuka simulasi</strong><span>Jawaban pre-task kamu sudah tersimpan.</span></div>
+      </div>
+
+      <div class="panel pdf-box" id="pdf-box">
+        <div class="pdf-head">
+          <div>
+            <p class="eyebrow">Materi</p>
+            <h2 class="pdf-title">Bank Sampah</h2>
+          </div>
+          <div class="pdf-tools">
+            <button type="button" class="btn" id="pdf-zoom" aria-pressed="false" hidden>Perbesar</button>
+            <a class="btn" id="pdf-open" href="BankSampah.pdf" target="_blank" rel="noopener">Buka PDF</a>
+            <a class="btn" id="pdf-dl" href="BankSampah.pdf" download>Unduh</a>
+          </div>
+        </div>
+        <p class="pdf-status" id="pdf-status" role="status">Memuat materi...</p>
+        <div class="pdf-scroll" id="pdf-scroll"><div class="pdf-pages" id="pdf-pages"></div></div>
+      </div>
     </section>
 
     <!-- Layar 2: latihan memilah 3D (menunggu admin memindahkan ke post-task) -->
@@ -329,6 +359,11 @@
           <ol class="top-list" id="res-top-list"></ol>
           <p class="quiz-score" id="res-top-score"></p>
         </div>
+        <div class="res res-claim" id="claim-box" hidden>
+          <span class="eyebrow">Selamat, kamu masuk top 3!</span>
+          <p id="claim-text"></p>
+          <div class="game-actions"><button type="button" class="btn primary" id="b-claim">Claim hadiah</button></div>
+        </div>
         <p>Terima kasih. Jawabanmu sudah tersimpan dan kamu boleh menutup halaman ini. Jawaban benar dan penjelasan tiap soal ada di bawah.</p>
       </div>
 
@@ -342,6 +377,53 @@
       </form>
     </section>
   </main>
+
+  <!-- Claim hadiah top 3: form e-wallet, konfirmasi nomor, lalu layar penuh podium -->
+  <dialog class="dlg" id="dlg-wallet" aria-labelledby="dw-title">
+    <form id="f-wallet" novalidate autocomplete="off">
+      <h2 id="dw-title">Claim hadiah</h2>
+      <p id="dw-prize" class="dlg-sub"></p>
+      <p class="lbl" id="dw-type-lbl">Pilih e-wallet</p>
+      <div class="wallets" id="wallet-opts" role="group" aria-labelledby="dw-type-lbl"></div>
+      <label class="lbl" for="wallet-no" id="wallet-no-lbl">Nomor e-wallet</label>
+      <input class="field" type="tel" id="wallet-no" inputmode="numeric" maxlength="20" placeholder="081234567890">
+      <p class="err" id="err-wallet" role="alert"></p>
+      <div class="game-actions">
+        <button type="submit" class="btn primary">Lanjut</button>
+        <button type="button" class="btn" id="wallet-cancel">Batal</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="dlg" id="dlg-confirm" aria-labelledby="dc-title">
+    <h2 id="dc-title">Apakah ini nomor Anda?</h2>
+    <div class="confirm-box">
+      <span class="eyebrow" id="dc-type"></span>
+      <strong id="dc-no"></strong>
+    </div>
+    <p class="dlg-sub">Pastikan nomor sudah benar. Setelah dikonfirmasi, nomor tidak bisa diubah sendiri dan hadiah dikirim ke nomor ini.</p>
+    <p class="err" id="err-confirm" role="alert"></p>
+    <div class="game-actions">
+      <button type="button" class="btn primary" id="confirm-yes">Ya, ini nomor saya</button>
+      <button type="button" class="btn" id="confirm-no">Bukan, ubah</button>
+    </div>
+  </dialog>
+
+  <div class="podium-screen" id="podium" role="dialog" aria-modal="true" aria-labelledby="pd-title" hidden>
+    <button type="button" class="btn pd-close" id="pd-close">Tutup</button>
+    <div class="pd-me">
+      <p class="eyebrow" id="pd-title">Peringkatmu</p>
+      <div class="pd-rank" id="pd-rank"></div>
+      <p class="pd-name" id="pd-name"></p>
+      <div class="pd-stats">
+        <div><span>Skor</span><strong id="pd-score"></strong></div>
+        <div><span>Waktu</span><strong id="pd-time"></strong></div>
+        <div><span>Hadiah</span><strong id="pd-prize"></strong></div>
+      </div>
+      <p class="pd-wallet" id="pd-wallet"></p>
+    </div>
+    <ol class="podium" id="pd-podium"></ol>
+  </div>
 
   <footer>
     <p><strong>Proyek penelitian mahasiswa Universitas Multimedia Nusantara (UMN), dilaksanakan di Universitas Trisakti.</strong> Halaman ini bukan situs resmi UMN maupun Universitas Trisakti dan memakai harga serta angka contoh untuk simulasi.</p>

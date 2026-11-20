@@ -3,7 +3,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var KEY = "sim-guest";
   var STEP = "sim-step";   // "info" = peserta sudah lanjut dari latihan memilah ke info daur ulang
-  var SCREENS = ["s0", "s1", "s2", "sinfo", "s3"];
+  var SCREENS = ["s0", "s1", "swait", "s2", "sinfo", "s3"];
   var socket = io();
 
   /* identitas guest: User ID acak dibuat di browser, disimpan supaya refresh tidak membuat dokumen baru */
@@ -16,13 +16,14 @@
   try { guest = JSON.parse(localStorage.getItem(KEY)); } catch (e) { }
   if (!guest || !guest.uid || !guest.nama) guest = null;
 
-  var phase = "simulator", hasPre = false, hasPost = false;
+  var phase = "wait", hasPre = false, hasPost = false;
   var quiz = null;          // pertanyaan dan pilihan dari server (tanpa kunci jawaban)
   var pilah = null, pilahTried = false;
   var current = null;
   function getStep() { try { return localStorage.getItem(STEP); } catch (e) { return null; } }
   function setStep(v) { try { if (v) localStorage.setItem(STEP, v); else localStorage.removeItem(STEP); } catch (e) { } }
   var playStart = null;     // waktu sentuhan pertama pada permainan yang sedang berjalan
+  var lastTop = null;       // data leaderboard terbaru dari server (dipakai claim hadiah dan podium)
 
   /* ---------- kuis (dipakai pre-task dan post-task, desain sama dengan kuis di situs) ---------- */
   function makeQuiz(boxId, countId, errId) {
@@ -87,7 +88,7 @@
     $("post-actions").hidden = true;
     $("post-intro").textContent = "Post-task selesai.";
     $("err3").textContent = "";
-    if (!r) { $("res-grid").hidden = true; $("res-note").textContent = ""; $("res-top").hidden = true; return; }
+    if (!r) { $("res-grid").hidden = true; $("res-note").textContent = ""; $("res-top").hidden = true; lastTop = null; updateClaim(); return; }
     $("res-grid").hidden = false;
     $("res-pre").textContent = r.preSkor == null ? "-" : r.preSkor + " / " + r.total;
     $("res-post").textContent = r.skor + " / " + r.total;
@@ -100,6 +101,8 @@
           : "Skor post-task turun " + (-d) + " poin dibanding pre-task.";
     }
     var t = r.top;
+    lastTop = t || null;
+    updateClaim();
     $("res-top").hidden = !t;
     if (t) {
       var ol = $("res-top-list"); ol.textContent = "";
@@ -139,6 +142,7 @@
     if (current !== id) { current = id; window.scrollTo(0, 0); }
     // adegan 3D dibuat sekali, saat layar latihan pertama kali tampil (ukuran kanvas baru bisa dibaca saat terlihat)
     if (id === "sinfo") { $("i-wait").hidden = hasPost; $("i-result").hidden = !hasPost; }
+    if (id === "swait") initPdf();
     if (id === "s2" && !pilahTried && window.initPilah) {
       pilahTried = true;
       try { pilah = window.initPilah(); } catch (e) { console.error("3D:", e); }
@@ -147,11 +151,80 @@
   function route() {
     if (!guest) return show("s0");
     if (!hasPre) return show("s1");
+    if (phase === "wait") return show("swait"); // waiting room: tunggu admin membuka simulasi
     if (phase === "post") return show("s3");
-    // urutan: pre-task, latihan memilah (s2), info daur ulang (sinfo), post-task (s3, dibuka admin)
+    // urutan: pre-task, waiting room (swait), latihan memilah (s2), info daur ulang (sinfo), post-task (s3, dibuka admin)
     // yang sudah post-task ikut balik ke simulasi saat admin mengembalikan fase
     show(getStep() === "info" ? "sinfo" : "s2");
   }
+
+  /* ---------- waiting room: pratinjau PDF materi ----------
+     Dirender dengan PDF.js ke canvas, bukan iframe/embed, karena browser HP (iOS Safari, Chrome Android)
+     tidak menampilkan semua halaman PDF di dalam iframe. PDF.js baru dimuat saat waiting room dibuka. */
+  var PDF_URL = "BankSampah.pdf";
+  var PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+  var PDFJS_WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  var pdfStarted = false, pdfDoc = null, pdfToken = 0, pdfWidth = 0, pdfTimer = null, pdfZoom = false;
+
+  function pdfFail() {
+    $("pdf-status").hidden = false;
+    $("pdf-status").textContent = "Pratinjau tidak bisa dimuat. Tekan Buka PDF atau Unduh untuk membaca materinya.";
+    pdfStarted = false; // boleh dicoba lagi saat waiting room dibuka berikutnya
+  }
+  function pdfRender() {
+    if (!pdfDoc) return;
+    var box = $("pdf-pages"), token = ++pdfToken;
+    var w = Math.min(box.clientWidth || 320, 1600);
+    pdfWidth = box.clientWidth;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var n = pdfDoc.numPages, i = 1;
+    box.textContent = "";
+    (function next() {
+      if (token !== pdfToken || i > n) { if (token === pdfToken) $("pdf-status").hidden = true; return; }
+      var num = i++;
+      pdfDoc.getPage(num).then(function (page) {
+        if (token !== pdfToken) return;
+        var base = page.getViewport({ scale: 1 });
+        var vp = page.getViewport({ scale: (w * dpr) / base.width });
+        var cv = document.createElement("canvas");
+        cv.width = Math.floor(vp.width); cv.height = Math.floor(vp.height);
+        cv.className = "pdf-page";
+        cv.setAttribute("role", "img");
+        cv.setAttribute("aria-label", "Slide " + num + " dari " + n);
+        box.appendChild(cv);
+        return page.render({ canvasContext: cv.getContext("2d"), viewport: vp }).promise.then(next);
+      }).catch(function (e) { console.error("pdf:", e); if (token === pdfToken) pdfFail(); });
+    })();
+  }
+  function initPdf() {
+    if (pdfStarted) { if (pdfDoc && $("pdf-pages").clientWidth !== pdfWidth) pdfRender(); return; }
+    pdfStarted = true;
+    $("pdf-status").hidden = false; $("pdf-status").textContent = "Memuat materi...";
+    function open() {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+      window.pdfjsLib.getDocument(PDF_URL).promise.then(function (doc) { pdfDoc = doc; pdfRender(); }).catch(function (e) { console.error("pdf:", e); pdfFail(); });
+    }
+    if (window.pdfjsLib) return open();
+    var sc = document.createElement("script");
+    sc.src = PDFJS; sc.async = true; sc.onload = open; sc.onerror = pdfFail;
+    document.head.appendChild(sc);
+  }
+  // putar layar HP / ubah ukuran jendela: render ulang supaya tetap tajam dan pas lebar
+  window.addEventListener("resize", function () {
+    clearTimeout(pdfTimer);
+    pdfTimer = setTimeout(function () {
+      if (!$("swait").hidden && pdfDoc && Math.abs($("pdf-pages").clientWidth - pdfWidth) > 20) pdfRender();
+    }, 250);
+  });
+  // layar sempit: tombol Perbesar melebarkan slide (bisa digeser ke samping) supaya teks slide terbaca
+  $("pdf-zoom").hidden = false;
+  $("pdf-zoom").addEventListener("click", function () {
+    pdfZoom = !pdfZoom;
+    $("pdf-box").classList.toggle("zoomed", pdfZoom);
+    $("pdf-zoom").setAttribute("aria-pressed", pdfZoom ? "true" : "false");
+    $("pdf-zoom").textContent = pdfZoom ? "Perkecil" : "Perbesar";
+    pdfRender();
+  });
 
   /* kirim event dengan ack + timeout; aman dikirim ulang karena server menolak duplikat */
   function send(ev, payload, btn, errEl, onOk) {
@@ -171,9 +244,10 @@
   function resetLocal() {
     try { localStorage.removeItem(KEY); localStorage.removeItem("bsp-best"); } catch (e) { }
     setStep(null);
-    guest = null; phase = "simulator"; hasPre = false; hasPost = false; quiz = null; playStart = null;
+    guest = null; phase = "wait"; hasPre = false; hasPost = false; quiz = null; playStart = null;
     $("f-gate").reset();
     pre.clear(); post.clear();
+    lastTop = null; closeClaimUi(); updateClaim();
     $("post-done").hidden = true; $("post-actions").hidden = false;
     $("post-intro").textContent = "Jawab 10 pertanyaan yang sama seperti di awal. Pilih satu jawaban untuk tiap pertanyaan. Jawaban tidak bisa diubah setelah dikirim.";
     $("err1").textContent = ""; $("err3").textContent = "";
@@ -321,6 +395,151 @@
     Object.keys(PRAKTIK).forEach(function (k) { var b = $(PRAKTIK[k].reset); if (b) b.click(); });
     choosePraktik(null, false);
   };
+
+
+  /* ---------- claim hadiah top 3 ----------
+     Alur: tombol Claim hadiah -> pilih e-wallet + isi nomor -> popup "apakah ini nomor Anda?" ->
+     simpan ke server -> layar penuh podium (rank, skor, waktu). Setelah tersimpan, tombol hanya membuka podium lagi. */
+  var EWALLETS = ["ShopeePay", "OVO", "DANA", "GoPay", "BCA"];
+  var walletType = null, walletNo = "";
+  function rupiah(n) { return "Rp " + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
+  function cleanNo(type, raw) { // sama dengan aturan server (server tetap memeriksa ulang)
+    var n = String(raw || "").replace(/[\s.\-()]/g, "");
+    if (!/^\+?\d+$/.test(n)) return null;
+    if (type === "BCA") return /^\d{10}$/.test(n) ? n : null;
+    n = n.replace(/^\+?62/, "0");
+    return /^08\d{8,12}$/.test(n) ? n : null;
+  }
+  function fmtNo(n) { return n.replace(/(\d{4})(?=\d)/g, "$1 "); }
+
+  function updateClaim() {
+    var w = lastTop && lastTop.winner;
+    $("claim-box").hidden = !w;
+    if (!w) return;
+    $("claim-text").textContent = w.payout
+      ? "Peringkat #" + w.rank + ", hadiah " + rupiah(w.prize) + ". Data " + w.payout.ewallet + " (\u2022\u2022\u2022\u2022 " + w.payout.last4 + ") sudah tersimpan."
+      : "Kamu peringkat #" + w.rank + " dan berhak atas hadiah " + rupiah(w.prize) + ". Tekan tombol di bawah, isi e-wallet kamu, lalu lihat peringkatmu.";
+    $("b-claim").textContent = w.payout ? "Lihat peringkatku" : "Claim hadiah";
+  }
+
+  var walletBtns = [];
+  (function buildWalletOpts() {
+    var box = $("wallet-opts");
+    EWALLETS.forEach(function (name) {
+      var b = document.createElement("button"); b.type = "button"; b.className = "opt"; b.textContent = name;
+      b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", function () {
+        walletType = name;
+        walletBtns.forEach(function (x) {
+          var on = x === b; x.classList.toggle("picked", on); x.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+        $("wallet-no-lbl").textContent = name === "BCA" ? "Nomor rekening BCA" : "Nomor HP " + name;
+        $("wallet-no").placeholder = name === "BCA" ? "1234567890" : "081234567890";
+        $("err-wallet").textContent = "";
+      });
+      walletBtns.push(b); box.appendChild(b);
+    });
+  })();
+
+  function openDlg(d) { if (d.showModal) { if (!d.open) d.showModal(); } else d.setAttribute("open", ""); }
+  function closeDlg(d) { if (d.close) { if (d.open) d.close(); } else d.removeAttribute("open"); }
+  function closeClaimUi() {
+    closeDlg($("dlg-wallet")); closeDlg($("dlg-confirm")); closePodium();
+    walletType = null; walletNo = ""; $("wallet-no").value = ""; $("err-wallet").textContent = ""; $("err-confirm").textContent = "";
+    walletBtns.forEach(function (x) { x.classList.remove("picked"); x.setAttribute("aria-pressed", "false"); });
+  }
+
+  /* layar penuh: pakai Fullscreen API kalau browser mengizinkan, kalau tidak tetap menutup seluruh layar lewat CSS */
+  function openPodium() {
+    var w = lastTop && lastTop.winner;
+    if (!w) return;
+    var me = lastTop.list.filter(function (r) { return r.me; })[0];
+    if (!me) return;
+    var medal = ["#ffc83d", "#cbd3e6", "#eba26b"][w.rank - 1];
+    $("podium").querySelector(".pd-me").style.setProperty("--mc", medal);
+    $("pd-rank").textContent = "#" + w.rank;
+    $("pd-name").textContent = me.nama;
+    $("pd-score").textContent = me.skor + " / " + me.total;
+    $("pd-time").textContent = fmtMs(me.ms);
+    $("pd-prize").textContent = rupiah(w.prize);
+    $("pd-wallet").textContent = w.payout ? "Hadiah dikirim ke " + w.payout.ewallet + " \u2022\u2022\u2022\u2022 " + w.payout.last4 : "";
+    var ol = $("pd-podium"); ol.textContent = "";
+    lastTop.list.forEach(function (row) {
+      var li = document.createElement("li"); li.setAttribute("data-rank", row.rank); if (row.me) li.className = "me";
+      var who = document.createElement("div"); who.className = "pd-who";
+      var nm = document.createElement("b"); nm.textContent = row.nama + (row.me ? " (kamu)" : "");
+      var sc = document.createElement("small"); sc.textContent = row.skor + " / " + row.total + " \u00b7 " + fmtMs(row.ms);
+      var pz = document.createElement("small"); pz.textContent = rupiah(row.prize);
+      who.appendChild(nm); who.appendChild(sc); who.appendChild(pz);
+      var blk = document.createElement("div"); blk.className = "pd-block"; blk.textContent = row.rank;
+      li.appendChild(who); li.appendChild(blk); ol.appendChild(li);
+    });
+    $("podium").hidden = false;
+    document.body.style.overflow = "hidden";
+    var el = $("podium");
+    try { var rq = el.requestFullscreen || el.webkitRequestFullscreen; if (rq) { var pr = rq.call(el); if (pr && pr.catch) pr.catch(function () { }); } } catch (e) { }
+    $("pd-close").focus();
+  }
+  function closePodium() {
+    if ($("podium").hidden) return;
+    $("podium").hidden = true;
+    document.body.style.overflow = "";
+    try {
+      var fs = document.fullscreenElement || document.webkitFullscreenElement;
+      if (fs) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); }
+    } catch (e) { }
+  }
+  $("pd-close").addEventListener("click", closePodium);
+  // keluar dari fullscreen lewat tombol Esc browser: tutup juga overlay-nya supaya tidak tertinggal setengah layar
+  function onFsChange() { if (!document.fullscreenElement && !document.webkitFullscreenElement && !$("podium").hidden) closePodium(); }
+  document.addEventListener("fullscreenchange", onFsChange);
+  document.addEventListener("webkitfullscreenchange", onFsChange);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("podium").hidden) closePodium(); });
+
+  $("b-claim").addEventListener("click", function () {
+    var w = lastTop && lastTop.winner;
+    if (!w) return;
+    if (w.payout) { openPodium(); return; }       // sudah pernah konfirmasi: langsung lihat peringkat
+    $("dw-prize").textContent = "Peringkat #" + w.rank + ": hadiah " + rupiah(w.prize) + ". Isi data e-wallet untuk pencairan.";
+    $("err-wallet").textContent = "";
+    openDlg($("dlg-wallet"));
+  });
+  $("wallet-cancel").addEventListener("click", function () { closeDlg($("dlg-wallet")); });
+
+  $("f-wallet").addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (!walletType) { $("err-wallet").textContent = "Pilih jenis e-wallet dulu."; return; }
+    var n = cleanNo(walletType, $("wallet-no").value);
+    if (!n) {
+      $("err-wallet").textContent = walletType === "BCA" ? "Nomor rekening BCA harus 10 digit." : "Nomor HP tidak valid. Contoh: 081234567890.";
+      return;
+    }
+    walletNo = n;
+    $("dc-type").textContent = walletType;
+    $("dc-no").textContent = fmtNo(n);
+    $("err-confirm").textContent = "";
+    closeDlg($("dlg-wallet"));
+    openDlg($("dlg-confirm"));
+  });
+  $("confirm-no").addEventListener("click", function () { closeDlg($("dlg-confirm")); openDlg($("dlg-wallet")); $("wallet-no").focus(); });
+
+  $("confirm-yes").addEventListener("click", function () {
+    var btn = $("confirm-yes"), old = btn.textContent;
+    btn.disabled = true; btn.textContent = "Menyimpan...";
+    $("err-confirm").textContent = "";
+    // podium dibuka setelah server menyimpan (fullscreen masih dalam jendela aksi klik pengguna; kalau diblokir, overlay CSS tetap menutup layar)
+    socket.timeout(8000).emit("payout:save", { ewallet: walletType, number: walletNo }, function (err, res) {
+      btn.disabled = false; btn.textContent = old;
+      if (err || !res) { $("err-confirm").textContent = "Koneksi bermasalah. Tekan Ya, ini nomor saya lagi."; return; }
+      if (res.reset) { resetLocal(); return; }
+      if (!res.ok) { $("err-confirm").textContent = res.error || "Gagal menyimpan."; return; }
+      lastTop = res.result && res.result.top ? res.result.top : lastTop;
+      updateClaim();
+      closeDlg($("dlg-confirm"));
+      walletNo = ""; $("wallet-no").value = "";
+      openPodium();
+    });
+  });
 
   route();
 })();

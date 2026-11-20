@@ -31,6 +31,18 @@ const isUid = (v) => typeof v === "string" && /^[a-z0-9]{16,40}$/.test(v);
 const noop = () => { };
 const MAX_MS = 3600000; // batas wajar waktu satu permainan: 1 jam
 
+/* hadiah leaderboard memilah sampah (rupiah) dan pilihan e-wallet untuk pencairan */
+const PRIZES = { 1: 100000, 2: 50000, 3: 25000 };
+const EWALLETS = ["ShopeePay", "OVO", "DANA", "GoPay", "BCA"];
+// normalisasi nomor: buang spasi/strip/titik, awalan +62 atau 62 jadi 0. Kembalikan null kalau formatnya tidak masuk akal.
+function cleanWalletNumber(type, raw) {
+  let n = String(raw || "").replace(/[\s.\-()]/g, "");
+  if (!/^\+?\d+$/.test(n)) return null;
+  if (type === "BCA") return /^\d{10}$/.test(n) ? n : null; // nomor rekening BCA: 10 digit
+  n = n.replace(/^\+?62/, "0");
+  return /^08\d{8,12}$/.test(n) ? n : null; // nomor HP yang terdaftar di e-wallet
+}
+
 /* Pre-task dan post-task memakai soal yang sama (quiz-data.js).
    Kunci jawaban hanya ada di server; browser menerima pertanyaan dan pilihan saja. */
 const PUBLIC_QUIZ = QUIZ.map(({ q, o }) => ({ q, o }));
@@ -71,17 +83,27 @@ function buildResult(doc) {
 async function topScorers(uid) {
   const docs = await users.find(
     { "game.first": { $gte: 1 } },
-    { projection: { nama: 1, "game.first": 1, "game.firstMs": 1, "game.total": 1 } }
+    { projection: { nama: 1, "game.first": 1, "game.firstMs": 1, "game.total": 1, payout: 1 } }
   ).toArray();
   if (!docs.length) return null; // belum ada yang mencetak skor
   const ms = (d) => (Number.isInteger(d.game.firstMs) ? d.game.firstMs : Infinity);
   docs.sort((x, y) => (y.game.first - x.game.first) || (ms(x) - ms(y)) || String(x.nama).localeCompare(String(y.nama)));
   const rows = docs.map((d, i) => ({
     rank: i + 1, nama: d.nama, skor: d.game.first, total: d.game.total,
-    ms: Number.isInteger(d.game.firstMs) ? d.game.firstMs : null, me: d._id === uid
+    ms: Number.isInteger(d.game.firstMs) ? d.game.firstMs : null, me: d._id === uid,
+    prize: PRIZES[i + 1] || 0
   }));
   const mine = rows.find((r) => r.me);
-  return { list: rows.slice(0, 3), myRank: mine ? mine.rank : null, count: rows.length };
+  // data hadiah hanya untuk pemilik akun; nomor dikirim tersamar (4 digit terakhir)
+  let winner = null;
+  if (mine && mine.rank <= 3) {
+    const pd = docs[mine.rank - 1].payout;
+    winner = {
+      rank: mine.rank, prize: mine.prize,
+      payout: pd && pd.number ? { ewallet: pd.ewallet, last4: String(pd.number).slice(-4), len: String(pd.number).length } : null
+    };
+  }
+  return { list: rows.slice(0, 3), myRank: mine ? mine.rank : null, count: rows.length, winner };
 }
 
 // hasil lengkap + peserta terbaik. Kegagalan mengambil peserta terbaik tidak boleh menggagalkan penyimpanan post-task.
@@ -94,7 +116,7 @@ async function resultFor(doc, uid) {
 
 /* ---------- state + database ---------- */
 let users, state, archive;
-let phase = "simulator"; // "simulator" | "post"
+let phase = "wait"; // "wait" (waiting room, sesi materi) | "simulator" | "post"
 let sessionId = crypto.randomBytes(8).toString("hex"); // berganti setiap admin menekan reset
 
 let statsTimer = null;
@@ -192,6 +214,7 @@ io.on("connection", (socket) => {
       const uid = socket.data.uid;
       if (!uid) return ack({ ok: false, error: "Belum masuk sesi." });
       if (socket.data.sid !== sessionId) return ack({ ok: false, reset: true });
+      if (phase === "wait") return ack({ ok: false, error: "Simulasi belum dibuka admin." });
       const skor = data && data.skor, total = data && data.total;
       const ms = data && data.ms;
       const msOk = Number.isInteger(ms) && ms >= 1 && ms <= MAX_MS ? ms : null;
@@ -204,6 +227,34 @@ io.on("connection", (socket) => {
       ack({ ok: true });
       pushStats();   // <-- baris baru ini
     } catch (e) { console.error("game:", e.message); ack({ ok: false, error: "Gagal menyimpan." }); }
+  });
+
+  /* klaim hadiah top 3: simpan jenis e-wallet + nomor, sekali saja (tidak bisa ditimpa).
+     Peringkat dihitung ulang di server, jadi tidak bisa dipalsukan dari browser. */
+  socket.on("payout:save", async (data, ack = noop) => {
+    try {
+      const uid = socket.data.uid;
+      if (!uid) return ack({ ok: false, error: "Belum masuk sesi." });
+      if (socket.data.sid !== sessionId) return ack({ ok: false, reset: true });
+      const ewallet = data && data.ewallet;
+      if (!EWALLETS.includes(ewallet)) return ack({ ok: false, error: "Pilih jenis e-wallet." });
+      const number = cleanWalletNumber(ewallet, data && data.number);
+      if (!number) {
+        return ack({ ok: false, error: ewallet === "BCA" ? "Nomor rekening BCA harus 10 digit." : "Nomor HP e-wallet tidak valid (contoh: 081234567890)." });
+      }
+      const doc = await users.findOne({ _id: uid }, { projection: { post: 1, payout: 1 } });
+      if (!doc || !doc.post) return ack({ ok: false, error: "Selesaikan post-task terlebih dahulu." });
+      if (doc.payout) return ack({ ok: true, duplicate: true, result: await resultFor(await users.findOne({ _id: uid }, { projection: { pre: 1, post: 1, game: 1 } }), uid) });
+      const top = await topScorers(uid);
+      if (!top || !top.winner) return ack({ ok: false, error: "Hadiah hanya untuk peserta top 3." });
+      await users.updateOne(
+        { _id: uid, payout: { $exists: false } },
+        { $set: { payout: { ewallet, number, rank: top.winner.rank, prize: top.winner.prize, at: new Date() } } }
+      );
+      const fresh = await users.findOne({ _id: uid }, { projection: { pre: 1, post: 1, game: 1 } });
+      ack({ ok: true, result: await resultFor(fresh, uid) });
+      io.to("admins").emit("payouts:changed"); // panel admin menyegarkan tabel pencairan
+    } catch (e) { console.error("payout:", e.message); ack({ ok: false, error: "Gagal menyimpan." }); }
   });
 
   /* ---- admin ---- */
@@ -223,7 +274,7 @@ io.on("connection", (socket) => {
   socket.on("admin:set-phase", async (next, ack = noop) => {
     try {
       if (!socket.data.admin) return ack({ ok: false, error: "Unauthorized" });
-      if (!["simulator", "post"].includes(next)) return ack({ ok: false, error: "Phase tidak valid" });
+      if (!["wait", "simulator", "post"].includes(next)) return ack({ ok: false, error: "Phase tidak valid" });
       phase = next;
       await state.updateOne({ _id: "session" }, { $set: { phase } }, { upsert: true });
       io.to("users").emit("phase:change", phase); // broadcast ke semua user aktif
@@ -249,7 +300,7 @@ io.on("connection", (socket) => {
         await archive.insertMany(docs.map(({ _id, ...rest }) => ({ ...rest, uid: _id, archivedAt: now })));
       }
       await users.deleteMany({});
-      phase = "simulator";
+      phase = "wait";
       sessionId = crypto.randomBytes(8).toString("hex");
       await state.updateOne({ _id: "session" }, { $set: { phase, sessionId } }, { upsert: true });
       io.to("users").emit("session:reset"); // semua user kembali ke Screen 0
@@ -269,6 +320,69 @@ app.get("/api/export", async (req, res) => {
     res.setHeader("Content-Disposition", 'attachment; filename="hasil.json"');
     res.json(docs);
   } catch (e) { res.status(500).json({ error: "Server bermasalah." }); }
+});
+
+/* ---------- data pencairan hadiah top 3 (khusus admin) ----------
+   Berisi nomor e-wallet LENGKAP, jadi hanya lewat header x-admin-key (bukan lewat socket user). */
+async function payoutRows() {
+  const docs = await users.find(
+    { "game.first": { $gte: 1 } },
+    { projection: { nama: 1, "game.first": 1, "game.firstMs": 1, "game.total": 1, post: 1, payout: 1 } }
+  ).toArray();
+  const ms = (d) => (Number.isInteger(d.game.firstMs) ? d.game.firstMs : Infinity);
+  docs.sort((x, y) => (y.game.first - x.game.first) || (ms(x) - ms(y)) || String(x.nama).localeCompare(String(y.nama)));
+  const rows = [];
+  docs.forEach((d, i) => {
+    const rank = i + 1;
+    if (rank > 3 && !d.payout) return; // di luar top 3 dan tidak pernah klaim: tidak perlu ditampilkan
+    rows.push({
+      rank, uid: d._id, nama: d.nama,
+      skor: d.game.first, total: d.game.total,
+      ms: Number.isInteger(d.game.firstMs) ? d.game.firstMs : null,
+      prize: PRIZES[rank] || 0,
+      postDone: !!d.post,
+      status: d.payout ? "sudah" : "belum",
+      ewallet: d.payout ? d.payout.ewallet : null,
+      number: d.payout ? d.payout.number : null,
+      claimedRank: d.payout ? d.payout.rank : null,
+      claimedPrize: d.payout ? d.payout.prize : null,
+      claimedAt: d.payout && d.payout.at ? new Date(d.payout.at).toISOString() : null
+    });
+  });
+  return rows;
+}
+
+app.get("/api/payouts", async (req, res) => {
+  if (!validAdmin(req.get("x-admin-key"))) return res.status(401).json({ error: "Unauthorized" });
+  try { res.json({ rows: await payoutRows() }); }
+  catch (e) { console.error("payouts:", e.message); res.status(500).json({ error: "Server bermasalah." }); }
+});
+
+// sel CSV: kutip ganda di-escape, dan awalan = + - @ dinetralkan supaya Excel tidak menjalankannya sebagai rumus
+function csvCell(v) {
+  let t = v === null || v === undefined ? "" : String(v);
+  if (/^[=+\-@\t\r]/.test(t)) t = "'" + t;
+  return '"' + t.replace(/"/g, '""') + '"';
+}
+app.get("/api/payouts.csv", async (req, res) => {
+  if (!validAdmin(req.get("x-admin-key"))) return res.status(401).json({ error: "Unauthorized" });
+  try {
+    const rows = await payoutRows();
+    const head = ["Peringkat", "Nama", "Skor", "Total soal", "Waktu (detik)", "Hadiah (Rp)", "Status data", "E-wallet", "Nomor", "Peringkat saat klaim", "Waktu klaim", "User ID"];
+    const lines = [head.map(csvCell).join(",")];
+    rows.forEach((r) => {
+      const status = r.status === "sudah" ? "Sudah isi data" : (r.postDone ? "Belum isi data" : "Belum post-task");
+      // nomor sudah divalidasi hanya angka: dibungkus ="..." agar Excel tidak membuang angka 0 di depan
+      const num = r.number ? '="' + r.number + '"' : "";
+      lines.push([
+        r.rank, r.nama, r.skor, r.total, r.ms === null ? "" : (r.ms / 1000).toFixed(1), r.prize, status,
+        r.ewallet || "", null, r.claimedRank || "", r.claimedAt || "", r.uid
+      ].map((v, i) => (i === 8 ? num : csvCell(v))).join(","));
+    });
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", 'attachment; filename="pencairan-top3.csv"');
+    res.send("\ufeff" + lines.join("\r\n") + "\r\n");
+  } catch (e) { console.error("payouts.csv:", e.message); res.status(500).json({ error: "Server bermasalah." }); }
 });
 
 /* ---------- start ---------- */

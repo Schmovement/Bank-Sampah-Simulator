@@ -11,6 +11,19 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="app.css">
   <script src="theme.js" defer></script>
+  <style>
+    main.admin { max-width: 960px; }
+    @media (min-width: 720px) { main.admin .stats { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+    .pay-sub { color: var(--muted); margin: 4px 0 10px; }
+    .pay-wrap { overflow-x: auto; margin-top: 12px; }
+    .pay-table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+    .pay-table th, .pay-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    .pay-table th { color: var(--muted); font-weight: 700; }
+    .pay-table .num { font-variant-numeric: tabular-nums; font-weight: 700; }
+    .pay-tag { display: inline-block; padding: 2px 10px; border-radius: 999px; font-weight: 700; font-size: .85rem; border: 1px solid var(--line); }
+    .pay-tag.ok { background: color-mix(in srgb, var(--good) 18%, transparent); border-color: var(--good); }
+    .pay-tag.wait { background: color-mix(in srgb, var(--bad) 12%, transparent); }
+  </style>
 </head>
 
 <body>
@@ -34,7 +47,7 @@
         <p class="err" id="err" role="alert"></p>
       </form>
 
-      <div id="panel" hidden style="display:grid;gap:16px">
+      <div id="panel" hidden style="display:grid;gap:16px;grid-template-columns:minmax(0,1fr)">
         <div class="panel">
           <p class="eyebrow">Fase saat ini</p>
           <div class="phase" id="phase">-</div>
@@ -48,9 +61,11 @@
           <div class="stat"><b id="game">0</b>Selesai game (percobaan pertama)</div>
         </div>
 
+        <button class="btn danger" id="b-sim" type="button">PINDAHKAN SEMUA USER KE SIMULASI</button>
         <button class="btn danger" id="b-post" type="button">PAKSA SEMUA USER KE POST-TASK</button>
 
         <div class="row-btns">
+          <button class="btn" id="b-wait" type="button">Kembalikan ke Waiting Room</button>
           <button class="btn" id="b-reset" type="button">Kembalikan ke Simulator</button>
           <button class="btn" id="b-dl" type="button">Unduh data (JSON)</button>
           <button class="btn warn" id="b-clear" type="button">Clear memory (reset kuis)</button>
@@ -58,6 +73,23 @@
         </div>
         <p class="ok" id="ok2" aria-live="polite"></p>
         <p class="err" id="err2" role="alert"></p>
+
+        <div class="panel">
+          <p class="eyebrow">Pencairan hadiah</p>
+          <h2>Top 3 &amp; data e-wallet</h2>
+          <p class="pay-sub">Peringkat dari permainan pertama (skor tertinggi, seri dipecah waktu tercepat). Nomor ditampilkan lengkap, jangan dibagikan.</p>
+          <div class="row-btns">
+            <button class="btn" id="b-pay-refresh" type="button">Segarkan</button>
+            <button class="btn primary" id="b-pay-csv" type="button">Unduh CSV</button>
+          </div>
+          <div class="pay-wrap">
+            <table class="pay-table" id="pay-table">
+              <thead><tr><th>#</th><th>Nama</th><th>Skor</th><th>Waktu</th><th>Hadiah</th><th>E-wallet</th><th>Nomor</th><th>Status</th></tr></thead>
+              <tbody id="pay-body"><tr><td colspan="8">Belum ada data.</td></tr></tbody>
+            </table>
+          </div>
+          <p class="err" id="err-pay" role="alert"></p>
+        </div>
       </div>
     </main>
   </div>
@@ -72,7 +104,7 @@
       function auth() {
         socket.emit("admin:auth", key, function (res) {
           if (res && res.ok) {
-            $("login").hidden = true; $("panel").hidden = false; $("err").textContent = "";
+            $("login").hidden = true; $("panel").hidden = false; $("err").textContent = ""; loadPayouts();
           } else {
             key = ""; $("err").textContent = "Kunci admin salah.";
           }
@@ -83,7 +115,7 @@
       socket.on("disconnect", function () { $("conn").textContent = "Menyambung ulang..."; $("conn").classList.add("off"); });
 
       socket.on("stats", function (s) {
-        $("phase").textContent = s.phase === "post" ? "POST-TASK" : "SIMULATOR";
+        $("phase").textContent = s.phase === "post" ? "POST-TASK" : s.phase === "wait" ? "WAITING ROOM" : "SIMULATOR";
         $("online").textContent = s.online; $("total").textContent = s.total;
         $("pre").textContent = s.preDone; $("post").textContent = s.postDone;
         $("game").textContent = s.gameDone || 0;
@@ -95,6 +127,12 @@
           if (!res || !res.ok) $("err2").textContent = (res && res.error) || "Gagal mengubah fase.";
         });
       }
+      $("b-sim").addEventListener("click", function () {
+        if (confirm("Semua user di waiting room akan langsung dipindah ke Simulasi. Lanjut?")) setPhase("simulator");
+      });
+      $("b-wait").addEventListener("click", function () {
+        if (confirm("Kembalikan fase ke Waiting Room? Semua user yang sudah selesai pre-task akan dipindah kembali ke waiting room.")) setPhase("wait");
+      });
       $("b-post").addEventListener("click", function () {
         if (confirm("Semua user aktif akan langsung dipindah ke Post-Task. Lanjut?")) setPhase("post");
       });
@@ -118,6 +156,53 @@
           else $("err2").textContent = (res && res.error) || "Gagal reset.";
         });
       });
+
+      /* ---------- pencairan hadiah top 3 ---------- */
+      function fmtRp(n) { return "Rp " + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
+      function fmtSec(ms) { return ms === null ? "-" : (ms / 1000).toFixed(1) + " dtk"; }
+      function td(text, cls) { var c = document.createElement("td"); c.textContent = text; if (cls) c.className = cls; return c; }
+
+      function renderPayouts(rows) {
+        var body = $("pay-body"); body.textContent = "";
+        if (!rows.length) { var tr0 = document.createElement("tr"); var c0 = td("Belum ada peserta yang mencetak skor."); c0.colSpan = 8; tr0.appendChild(c0); body.appendChild(tr0); return; }
+        rows.forEach(function (r) {
+          var tr = document.createElement("tr");
+          tr.appendChild(td(r.rank, "num"));
+          tr.appendChild(td(r.nama));
+          tr.appendChild(td(r.skor + " / " + r.total, "num"));
+          tr.appendChild(td(fmtSec(r.ms), "num"));
+          tr.appendChild(td(r.prize ? fmtRp(r.prize) : "-", "num"));
+          tr.appendChild(td(r.ewallet || "-"));
+          tr.appendChild(td(r.number || "-", "num"));
+          var st = document.createElement("td"), tag = document.createElement("span");
+          tag.className = "pay-tag " + (r.status === "sudah" ? "ok" : "wait");
+          tag.textContent = r.status === "sudah" ? "Sudah isi" : (r.postDone ? "Belum isi" : "Belum post-task");
+          st.appendChild(tag);
+          if (r.status === "sudah" && r.claimedRank !== r.rank) { // peringkat bergeser sejak klaim
+            var note = document.createElement("small"); note.textContent = " klaim saat #" + r.claimedRank; st.appendChild(note);
+          }
+          tr.appendChild(st); body.appendChild(tr);
+        });
+      }
+      function loadPayouts() {
+        $("err-pay").textContent = "";
+        fetch("/api/payouts", { headers: { "x-admin-key": key } })
+          .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+          .then(function (d) { renderPayouts(d.rows || []); })
+          .catch(function () { $("err-pay").textContent = "Gagal memuat data pencairan."; });
+      }
+      $("b-pay-refresh").addEventListener("click", loadPayouts);
+      $("b-pay-csv").addEventListener("click", function () {
+        $("err-pay").textContent = "";
+        fetch("/api/payouts.csv", { headers: { "x-admin-key": key } })
+          .then(function (r) { if (!r.ok) throw new Error(r.status); return r.blob(); })
+          .then(function (b) {
+            var a = document.createElement("a");
+            a.href = URL.createObjectURL(b); a.download = "pencairan-top3.csv"; a.click();
+          })
+          .catch(function () { $("err-pay").textContent = "Gagal mengunduh CSV."; });
+      });
+      socket.on("payouts:changed", loadPayouts);
 
       $("b-dl").addEventListener("click", function () {
         fetch("/api/export", { headers: { "x-admin-key": key } })
