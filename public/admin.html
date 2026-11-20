@@ -80,6 +80,7 @@
           <p class="pay-sub">Peringkat dari permainan pertama (skor tertinggi, seri dipecah waktu tercepat). Nomor ditampilkan lengkap, jangan dibagikan.</p>
           <div class="row-btns">
             <button class="btn" id="b-pay-refresh" type="button">Segarkan</button>
+            <button class="btn" id="b-pay-podium" type="button">Lihat podium</button>
             <button class="btn primary" id="b-pay-csv" type="button">Unduh CSV</button>
           </div>
           <div class="pay-wrap">
@@ -92,6 +93,15 @@
         </div>
       </div>
     </main>
+  </div>
+
+  <div class="podium-screen" id="podium" role="dialog" aria-modal="true" aria-labelledby="pd-title" hidden>
+    <button type="button" class="btn pd-close" id="pd-close">Tutup</button>
+    <div class="pd-me">
+      <p class="eyebrow" id="pd-title">Podium</p>
+      <div class="pd-name">Top 3 Memilah Sampah</div>
+    </div>
+    <ol class="podium" id="pd-podium"></ol>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
@@ -162,7 +172,9 @@
       function fmtSec(ms) { return ms === null ? "-" : (ms / 1000).toFixed(1) + " dtk"; }
       function td(text, cls) { var c = document.createElement("td"); c.textContent = text; if (cls) c.className = cls; return c; }
 
+      var lastRows = [];
       function renderPayouts(rows) {
+        lastRows = rows;
         var body = $("pay-body"); body.textContent = "";
         if (!rows.length) { var tr0 = document.createElement("tr"); var c0 = td("Belum ada peserta yang mencetak skor."); c0.colSpan = 8; tr0.appendChild(c0); body.appendChild(tr0); return; }
         rows.forEach(function (r) {
@@ -202,7 +214,45 @@
           })
           .catch(function () { $("err-pay").textContent = "Gagal mengunduh CSV."; });
       });
-      socket.on("payouts:changed", loadPayouts);
+      socket.on("payouts:changed", function () { loadPayouts(); if (!$("podium").hidden) setTimeout(renderPodium, 400); });
+
+      /* podium top 3 (layar penuh), dipakai admin untuk menampilkan pemenang */
+      function renderPodium() {
+        var ol = $("pd-podium"); ol.textContent = "";
+        lastRows.filter(function (r) { return r.rank <= 3; }).forEach(function (row) {
+          var li = document.createElement("li"); li.setAttribute("data-rank", row.rank);
+          var who = document.createElement("div"); who.className = "pd-who";
+          var nm = document.createElement("b"); nm.textContent = row.nama;
+          var sc = document.createElement("small"); sc.textContent = row.skor + " / " + row.total + " \u00b7 " + fmtSec(row.ms);
+          var pz = document.createElement("small"); pz.textContent = fmtRp(row.prize);
+          who.appendChild(nm); who.appendChild(sc); who.appendChild(pz);
+          var blk = document.createElement("div"); blk.className = "pd-block"; blk.textContent = row.rank;
+          li.appendChild(who); li.appendChild(blk); ol.appendChild(li);
+        });
+      }
+      function openPodium() {
+        renderPodium();
+        $("podium").hidden = false; document.body.style.overflow = "hidden";
+        var el = $("podium");
+        try { var rq = el.requestFullscreen || el.webkitRequestFullscreen; if (rq) { var pr = rq.call(el); if (pr && pr.catch) pr.catch(function () { }); } } catch (e) { }
+        $("pd-close").focus();
+      }
+      function closePodium() {
+        if ($("podium").hidden) return;
+        $("podium").hidden = true; document.body.style.overflow = "";
+        try { var fs = document.fullscreenElement || document.webkitFullscreenElement; if (fs) (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) { }
+      }
+      $("b-pay-podium").addEventListener("click", function () {
+        // muat data terbaru dulu supaya podium tidak memakai data lama
+        fetch("/api/payouts", { headers: { "x-admin-key": key } })
+          .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+          .then(function (d) { renderPayouts(d.rows || []); openPodium(); })
+          .catch(function () { $("err-pay").textContent = "Gagal memuat podium."; });
+      });
+      $("pd-close").addEventListener("click", closePodium);
+      document.addEventListener("fullscreenchange", function () { if (!document.fullscreenElement && !$("podium").hidden) closePodium(); });
+      document.addEventListener("webkitfullscreenchange", function () { if (!document.webkitFullscreenElement && !$("podium").hidden) closePodium(); });
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") closePodium(); });
 
       $("b-dl").addEventListener("click", function () {
         fetch("/api/export", { headers: { "x-admin-key": key } })
