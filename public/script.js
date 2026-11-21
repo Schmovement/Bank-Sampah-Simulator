@@ -28,7 +28,7 @@
       var s = v * w.p; total += s; kg += v; $("s-" + w.id).textContent = rp(s);
     });
     $("c-week").textContent = rp(total);
-    $("c-sem").textContent = rp(total * 16);
+    $("c-sem").textContent = rp(total * 4);
     $("c-kg").textContent = (Math.round(kg * 10) / 10).toString().replace(".", ",");
   }
   calc();
